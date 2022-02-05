@@ -6,7 +6,7 @@
 
 /* ------------------- Pre-processor directives ------------------- */
 #include "mbed.h"   // Mbed library
-#include "C12832.h" // LCD screen llibrary
+#include "C12832.h" // LCD screen library
 #include "QEI.h"    // Quadrature Encoder Library
 
 #define FORWARD 1   // Forward/backward direction pin logic value (for Motor class)
@@ -139,16 +139,11 @@ void pwm_test() {
 
 /* ----------------------- Main function ----------------------- */
 int main() {
-    typedef enum {PWM, MOTORS, ENCODERS, SQUARE} PresentationMode;  //Definition of the enum that refers to possible presentation modes
-    PresentationMode p_mode = PWM;    // Mode in which program will opearate
 
-    while(1) {  // Main while loop of the program
-        switch (p_mode) {
-            case(PWM): {
-                pwm_test();
-            }
-            default: {
-            }
-        }
-    }
+    // pwm_test();
+    // motors_test();
+    // encoders_test();
+    // square_path();
+
+    while(1) {}  // Main while loop of the program
 }

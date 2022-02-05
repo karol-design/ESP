@@ -1,14 +1,19 @@
 /* Technical Demonstration 1 - Motors
- * Description: This code is intended to run on the STM32 MCU
+ * Description: STM32 firmware for PWM and Motors control and encoders test
  * Date: 05/02/2022
  */
 
 #include "mbed.h"   // Import the Mbed libraries
 #include "C12832.h" // Import the C12832 LCD screen llibrary
 
+#define FORWARD 1   // Forward/backward direction pin logic value (for Motor class)
+#define BACKWARD 0
+#define BIPOLAR 1   // Bipolar/unipolar mode pin logic value (for Motor class)
+#define UNIPOLAR 0
+
 C12832 lcd(D11, D13, D12, D7, D10); // LCD Initialisation (pin assignment)
 
-/* -------------------------- Main function --------------------------- */
+
 /* ----------------------- Pwm class ----------------------- */
 class Pwm {
 

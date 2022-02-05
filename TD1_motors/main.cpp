@@ -11,6 +11,10 @@
 #define BIPOLAR 1   // Bipolar/unipolar mode pin logic value (for Motor class)
 #define UNIPOLAR 0
 
+// Define the interface - pin names
+#define PIN_MOTOR1_PWM D4
+#define PIN_MOTOR2_PWM D5
+
 C12832 lcd(D11, D13, D12, D7, D10); // LCD Initialisation (pin assignment)
 
 

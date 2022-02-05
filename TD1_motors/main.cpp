@@ -7,6 +7,7 @@
 /* ------------------- Pre-processor directives ------------------- */
 #include "mbed.h"   // Mbed library
 #include "C12832.h" // LCD screen llibrary
+#include "QEI.h"    // Quadrature Encoder Library
 
 #define FORWARD 1   // Forward/backward direction pin logic value (for Motor class)
 #define BACKWARD 0
@@ -16,7 +17,12 @@
 #define PIN_MOTOR1_PWM D4   // Define the interface - pin names
 #define PIN_MOTOR2_PWM D5
 
-#define SWITCHING_FREQUENCY 10000 // Set PWM switching frequency to 10 kHz (100 us period)
+#define SWITCHING_FREQUENCY 10000.0f  // Set PWM switching frequency to 10 kHz (100 us period)
+#define PULSES_PER_REV 256          // No. of quadrature encoder pulses per revolution
+#define WHEEL_RADIUS 0.05f          // Wheel radius (for velocity measurement)
+#define PI 3.141592f                // Pi value (for velocity measurement)
+#define MAX_VELOCITY 10.0f          // Maximum velocity in m/s (for normalised velocity)
+#define PULSES_DELTA_T_US 1000      // Delta t (in us) for pulses/s measurement - the wheel makes ~10 revolutions/s
 
 
 C12832 lcd(D11, D13, D12, D7, D10); // LCD Initialisation (pin assignment)
@@ -38,6 +44,47 @@ public:
 
     void setDutyCycle(float duty_cycle) {
         _pwm_pin.write(duty_cycle);  // Set the duty cycle (val between 0.0 - 1.0)
+    }
+};
+
+
+/* ----------------------- Encoder class ----------------------- */
+class Encoder {
+
+private:
+    QEI wheel;          // Quadrature Encoder API
+    Ticker sampler;     // Ticker object to regularly sample current wheel velocity 
+    Timeout pulsesDt;   // Timeout object to measure delta t, when measureing pulses/s
+    int _pulses_per_s;  // Pulses per second
+    float _velocity, _velocity_norm;                // Wheel velocity in m/s and normalised (0.0 - 1.0)
+    float _sampling_frequency, _sampling_period;    // Sampling frequency and period
+    
+    void samplePulses() {
+        wheel.reset();  // Reset pulses counter
+        pulsesDt.attach_us(callback(this, &Encoder::calcVelocity), PULSES_DELTA_T_US);   // Start timeout for calling calcVelocity func
+    }
+
+    void calcVelocity() {
+        _pulses_per_s = (wheel.getPulses() * 1000000 / (int) PULSES_DELTA_T_US); // Divide pulses counter by Dt
+        _velocity = ( ((float) _pulses_per_s / PULSES_PER_REV) * (2.0f * PI * WHEEL_RADIUS) ); // Multiply rev/s by wheel circumference
+    }
+
+public:
+    Encoder(PinName chA, PinName chB, float sf) : wheel(chA, chB, NC, PULSES_PER_REV), _sampling_frequency(sf) {
+        _sampling_period = (1.00f / _sampling_frequency);
+        sampler.attach(callback(this, &Encoder::samplePulses), _sampling_period);   // Start a ticker to regularly sample velocity
+    }
+
+    int getVelocity(void) { // Get most recent velocity in m/s
+        return _velocity;
+    }
+
+    int getVelocityNorm(void) { // Get most recent velocity normalised (0.0 - 1.0)
+        if (_velocity < MAX_VELOCITY) {
+            return (_velocity / MAX_VELOCITY);
+        } else {
+            return -1;  // Return an error (-1) if the velocity is outside normalised range
+        }
     }
 };
 

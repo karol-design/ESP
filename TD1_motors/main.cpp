@@ -3,17 +3,21 @@
  * Date: 05/02/2022
  */
 
-#include "mbed.h"   // Import the Mbed libraries
-#include "C12832.h" // Import the C12832 LCD screen llibrary
+
+/* ------------------- Pre-processor directives ------------------- */
+#include "mbed.h"   // Mbed library
+#include "C12832.h" // LCD screen llibrary
 
 #define FORWARD 1   // Forward/backward direction pin logic value (for Motor class)
 #define BACKWARD 0
 #define BIPOLAR 1   // Bipolar/unipolar mode pin logic value (for Motor class)
 #define UNIPOLAR 0
 
-// Define the interface - pin names
-#define PIN_MOTOR1_PWM D4
+#define PIN_MOTOR1_PWM D4   // Define the interface - pin names
 #define PIN_MOTOR2_PWM D5
+
+#define SWITCHING_FREQUENCY 10000 // Set PWM switching frequency to 10 kHz (100 us period)
+
 
 C12832 lcd(D11, D13, D12, D7, D10); // LCD Initialisation (pin assignment)
 
@@ -70,8 +74,8 @@ public:
 
 /* ----------------------- pwm_test function ----------------------- */
 void pwm_test() {
-    Pwm pwm1(PIN_MOTOR1_PWM, 10000); // First PWM channel, Pin = PIN_MOTOR1_PWM, f = 10 kHz
-    Pwm pwm2(PIN_MOTOR2_PWM, 10000); // Second PWM channel, Pin = PIN_MOTOR2_PWM, f = 10 kHz
+    Pwm pwm1(PIN_MOTOR1_PWM, SWITCHING_FREQUENCY); // Two PWM channels, f = SWITCHING_FREQUENCY
+    Pwm pwm2(PIN_MOTOR2_PWM, SWITCHING_FREQUENCY);
 
     for(int i = 0; i < 100; i++) {  // Test the whole range of duty cycle (DC): 0.0 - 1.0 
 

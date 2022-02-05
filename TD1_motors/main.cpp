@@ -64,6 +64,24 @@ public:
 };
 
 
+/* ----------------------- pwm_test function ----------------------- */
+void pwm_test() {
+    Pwm pwm1(PIN_MOTOR1_PWM, 10000); // First PWM channel, Pin = PIN_MOTOR1_PWM, f = 10 kHz
+    Pwm pwm2(PIN_MOTOR2_PWM, 10000); // Second PWM channel, Pin = PIN_MOTOR2_PWM, f = 10 kHz
+
+    for(int i = 0; i < 100; i++) {  // Test the whole range of duty cycle (DC): 0.0 - 1.0 
+
+        float duty_cycle = ((float) i / 100.0f);    // Map i value (0-100) to duty_cycle (0.0 - 1.0) 
+        pwm1.setDutyCycle(duty_cycle);  // Set the DC for pwm1
+
+        duty_cycle = 1.0f - duty_cycle; // For pwm2 test the DC from (1.0 - 0.0) 
+        pwm2.setDutyCycle(duty_cycle);  // Set the DC for pwm2
+
+        wait(0.1);  // Test procedure duration is 10 seconds
+    }
+}
+
+
 /* ----------------------- Main function ----------------------- */
 int main() {
     

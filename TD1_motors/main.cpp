@@ -88,8 +88,16 @@ void pwm_test() {
 
 /* ----------------------- Main function ----------------------- */
 int main() {
-    
-    while(1) {  // Main while loop of the program
+    typedef enum {PWM, MOTORS, ENCODERS, SQUARE} PresentationMode;  //Definition of the enum that refers to possible presentation modes
+    PresentationMode p_mode = PWM;    // Mode in which program will opearate
 
+    while(1) {  // Main while loop of the program
+        switch (p_mode) {
+            case(PWM): {
+                pwm_test();
+            }
+            default: {
+            }
+        }
     }
 }

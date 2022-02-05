@@ -13,14 +13,22 @@ C12832 lcd(D11, D13, D12, D7, D10); // LCD Initialisation (pin assignment)
 class Pwm {
 
 private:
-    PwmOut _pwm;        // Create PwmOut object
+    PwmOut _pwm_pin;    // Pwm pin - object of PwmOut class
     int _frequency;     // Frequency to be set
     int _period_us_val; // Period to be set (= 1/_frequency)
 
 public:
-    Pwm(PinName pin, int frequency) : _pwm(pin), _frequency(frequency) {
+    Pwm(PinName pin, int frequency) : _pwm_pin(pin), _frequency(frequency) {
         _period_us_val = (1000000 / frequency);  // Calculate the period value [micro seconds]
-        _pwm.period_us(_period_us_val);           // Set the period of the pwm otuput
+        _pwm_pin.period_us(_period_us_val);      // Set the period of the pwm otuput
+    }
+
+    void setDutyCycle(float duty_cycle) {
+        _pwm_pin.write(duty_cycle);  // Set the duty cycle (val between 0.0 - 1.0)
+    }
+};
+
+
 /* ----------------------- Motor class ----------------------- */
 class Motor {
 
@@ -45,8 +53,6 @@ public:
         _direction_pin = direction;
     }
 
-    void set(float duty_cycle) {
-        _pwm.write(duty_cycle);  // Set the duty cycle (val between 0.0 - 1.0)
     void setSpeed(float speed) { // Set speed (0.0 - 1.0)
         _motor.setDutyCycle(speed);
     }

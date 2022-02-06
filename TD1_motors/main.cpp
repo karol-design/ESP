@@ -75,11 +75,11 @@ public:
         sampler.attach(callback(this, &Encoder::samplePulses), _sampling_period);   // Start a ticker to regularly sample velocity
     }
 
-    int getVelocity(void) { // Get most recent velocity in m/s
+    int getVelocity(void) const { // Get most recent velocity in m/s
         return _velocity;
     }
 
-    int getVelocityNorm(void) { // Get most recent velocity normalised (0.0 - 1.0)
+    int getVelocityNorm(void) const { // Get most recent velocity normalised (0.0 - 1.0)
         if (_velocity < MAX_VELOCITY) {
             return (_velocity / MAX_VELOCITY);
         } else {

@@ -128,8 +128,7 @@ void pwm_test() {
     Pwm pwm1(PIN_MOTOR1_PWM, SWITCHING_FREQUENCY); // Two PWM channels, f = SWITCHING_FREQUENCY
     Pwm pwm2(PIN_MOTOR2_PWM, SWITCHING_FREQUENCY);
 
-    for(int i = 0; i < 100; i++) {  // Test the whole range of duty cycle (DC): 0.0 - 1.0 
-
+    for(int i = 0; i < 100; i++) {  // Test the entire range of duty cycle (DC): 0.0 - 1.0 
         float duty_cycle = ((float) i / 100.0f);    // Map i value (0-100) to duty_cycle (0.0 - 1.0) 
         pwm1.setDutyCycle(duty_cycle);  // Set the DC for pwm1
 
@@ -170,9 +169,8 @@ void motor_test() {
 int main() {
 
     // pwm_test();
-    // motors_test();
-    // encoders_test();
     // motor_test();
+    // encoder_test();
     // square_path();
 
     while(1) {}  // Main while loop of the program

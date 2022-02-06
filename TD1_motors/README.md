@@ -9,15 +9,16 @@ This is the code to be used during the first technical demonstration. Presentati
 - [ ] Wheel control. Independent control of the buggy wheels from the microprocessor (The buggy should draw out a square, with sides of 0.5 m in length and then stop when it reaches the starting position. It should then turn around, and re-trace the square in the opposite direction.)
 
 ### The following modes are implemented in the code:
-1. **PWM** - Sweep linearly through different PWM values 
-2. **MOTORS** - Change the speed of both motors every 2 seconds
-3. **ENCODERS** - Change the speed of both motors every 2 seconds and display the angular velocity on the LCD screen
-4. **SQUARE** - Drive on the virtual path in the shape of a square (0.5 m side), stop and re-trace the path in the opposite direction
+1. **pwm_test** - Sweep linearly through different PWM values 
+2. **motor_test** - Change the speed of both motors
+3. **encoder_test** - Display the velocity readings on the LCD screen
+4. **square_path** - Drive on the virtual path in the shape of a square (0.5 m side), stop and re-trace the path in the opposite direction
 
-### Naming convention
+### Naming convention in the project
 - macros - MACRO_NAME
 - classes - ClassName
 - functions - function_name
+- member functions - functionName
 - variables - variable_name
 - private data members - _variable_name
 

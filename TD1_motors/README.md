@@ -14,3 +14,10 @@ This is the code to be used during the first technical demonstration. Presentati
 3. **ENCODERS** - Change the speed of both motors every 2 seconds and display the angular velocity on the LCD screen
 4. **SQUARE** - Drive on the virtual path in the shape of a square (0.5 m side), stop and re-trace the path in the opposite direction
 
+### Naming convention
+- macros - MACRO_NAME
+- classes - ClassName
+- functions - function_name
+- variables - variable_name
+- private data members - _variable_name
+

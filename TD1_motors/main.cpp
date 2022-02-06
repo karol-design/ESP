@@ -21,6 +21,13 @@
 #define PIN_MOTOR1_MODE D5
 #define PIN_MOTOR2_MODE D6
 
+#define PIN_ENCODER1_CHA D7
+#define PIN_ENCODER2_CHA D8
+#define PIN_ENCODER1_CHB D9
+#define PIN_ENCODER2_CHB D10
+
+#define SAMPLING_FREQUENCY 100      // Velocity measurement sampling frequency
+
 #define SWITCHING_FREQUENCY 10000.0f  // Set PWM switching frequency to 10 kHz (100 us period)
 #define PULSES_PER_REV 256          // No. of quadrature encoder pulses per revolution
 #define WHEEL_RADIUS 0.05f          // Wheel radius (for velocity measurement)
@@ -79,11 +86,11 @@ public:
         sampler.attach(callback(this, &Encoder::samplePulses), _sampling_period);   // Start a ticker to regularly sample velocity
     }
 
-    int getVelocity(void) const { // Get most recent velocity in m/s
+    float getVelocity(void) const { // Get most recent velocity in m/s
         return _velocity;
     }
 
-    int getVelocityNorm(void) const { // Get most recent velocity normalised (0.0 - 1.0)
+    float getVelocityNorm(void) const { // Get most recent velocity normalised (0.0 - 1.0)
         if (_velocity < MAX_VELOCITY) {
             return (_velocity / MAX_VELOCITY);
         } else {
@@ -161,6 +168,33 @@ void motor_test() {
 
         motor1.setDirection(BACKWARD);
         motor2.setDirection(BACKWARD);
+    }
+}
+
+
+/* ----------------------- encoder_test function ----------------------- */
+void encoder_test() {
+    Motor motor1(PIN_MOTOR1_MODE, PIN_MOTOR1_DIR, PIN_MOTOR1_PWM, SWITCHING_FREQUENCY);
+    Motor motor2(PIN_MOTOR2_MODE, PIN_MOTOR2_DIR, PIN_MOTOR2_PWM, SWITCHING_FREQUENCY);
+    Encoder wheel1(PIN_ENCODER1_CHA, PIN_ENCODER1_CHA, SAMPLING_FREQUENCY);
+    Encoder wheel2(PIN_ENCODER2_CHA, PIN_ENCODER2_CHA, SAMPLING_FREQUENCY);
+
+    motor1.setDirection(FORWARD);
+    motor2.setDirection(FORWARD);
+
+    for(int i = 0; i < 100; i++) {  // Test the entire range of speed: 0.0 - 1.0 
+        float speed = ((float) i / 100.0f);    // Map i value (0-100) to duty_cycle (0.0 - 1.0) 
+        motor1.setSpeed(speed);     // Set the speed for motor1
+
+        speed = 1.0f - speed;       // For motor2 test the speed from 1.0 to 0.0
+        motor2.setSpeed(speed);     // Set the speed for motor2
+
+        wait(0.1);
+
+        lcd.cls(); //Clear the screen and display encoders readings [m/s]
+        lcd.locate(0, 0);
+        lcd.printf("M1 vel = %.2lf\n", wheel1.getVelocity());
+        lcd.printf("M2 vel = %.2lf", wheel2.getVelocity());
     }
 }
 

@@ -1,5 +1,7 @@
 /* Technical Demonstration 1 - Motors
  * Description: STM32 firmware for PWM and Motors control and encoders test
+ * Classes: Pwm, Encoder, Motor
+ * Functions: pwm_test, motor_test, encoder_test, square_path
  * Date: 05/02/2022
  */
 

@@ -190,5 +190,8 @@ int main() {
 
     while(1) {  // Main while loop of the program
         motor_test();
+        lcd.cls(); //Clear the screen and display encoders readings [m/s]
+            lcd.locate(0, 0);
+            lcd.printf("M1 vel = %.2lf m/s\n", 1.0);
     }
 }

@@ -16,8 +16,8 @@
 #define BIPOLAR 1   // Bipolar/unipolar mode pin logic value (for Motor class)
 #define UNIPOLAR 0
 
-#define PIN_MOTOR1_PWM D1   // Define the interface - pin names
-#define PIN_MOTOR2_PWM D2
+#define PIN_MOTOR1_PWM D4   // Define the interface - pin names
+#define PIN_MOTOR2_PWM D5
 #define PIN_MOTOR1_DIR D3
 #define PIN_MOTOR2_DIR D4
 #define PIN_MOTOR1_MODE D5

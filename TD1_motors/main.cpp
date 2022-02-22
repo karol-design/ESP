@@ -16,17 +16,18 @@
 #define BIPOLAR 1   // Bipolar/unipolar mode pin logic value (for Motor class)
 #define UNIPOLAR 0
 
-#define PIN_MOTOR1_PWM PB_13   // Define the interface - pin names
-#define PIN_MOTOR2_PWM PB_14
-#define PIN_MOTOR1_DIR D3
-#define PIN_MOTOR2_DIR D4
-#define PIN_MOTOR1_MODE D5
-#define PIN_MOTOR2_MODE D6
+#define PIN_MOTOR1_PWM PA_13   // Define the interface - pin names
+#define PIN_MOTOR1_MODE PA_14
+#define PIN_MOTOR1_DIR PA_15
 
-#define PIN_ENCODER1_CHA D7
-#define PIN_ENCODER2_CHA D8
-#define PIN_ENCODER1_CHB D9
-#define PIN_ENCODER2_CHB D10
+#define PIN_MOTOR2_PWM PC_5
+#define PIN_MOTOR2_MODE PC_6
+#define PIN_MOTOR2_DIR PC_8
+
+#define PIN_ENCODER1_CHA PC_14
+#define PIN_ENCODER1_CHB PC_15
+#define PIN_ENCODER2_CHA PC_10
+#define PIN_ENCODER2_CHB PC_12
 
 #define SAMPLING_FREQUENCY 100      // Velocity measurement sampling frequency
 
@@ -159,13 +160,7 @@ void motor_test() {
     motor1.setDirection(FORWARD);   // Test motors for FORWARD and BACKWARD directions
     motor2.setDirection(FORWARD);
 
-    lcd.cls(); //Clear the screen and display encoders readings [m/s]
-    lcd.locate(0, 0);
-    lcd.printf("M1 vel = 1 m/s");
-    lcd.locate(0, 10);
-    lcd.printf("M2 vel = %.2lf m/s", wheel2.getVelocity());
-
-    /*for(int i = 0; i<2; i++) {
+    for(int i = 0; i<2; i++) {
         for(int i = 0; i < 100; i++) {  // Test the entire range of speed: 0.0 - 1.0 
             float speed = ((float) i / 100.0f);    // Map i value (0-100) to duty_cycle (0.0 - 1.0) 
             motor1.setSpeed(speed);     // Set the speed for motor1
@@ -184,7 +179,7 @@ void motor_test() {
 
         motor1.setDirection(BACKWARD);
         motor2.setDirection(BACKWARD);
-    }*/
+    }
 }
 
 

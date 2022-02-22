@@ -184,9 +184,11 @@ void motor_test() {
 /* ----------------------- Main function ----------------------- */
 int main() {
 
-    // pwm_test();
+    // 
     // motor_test();
     // square_path();
 
-    while(1) {}  // Main while loop of the program
+    while(1) {  // Main while loop of the program
+        pwm_test();
+    }
 }

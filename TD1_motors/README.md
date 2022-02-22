@@ -26,5 +26,5 @@ This is the code to be used during the first technical demonstration. Presentati
 - private data members - _variable_name
 
 ### Contributing and testing requirements
-- [ ] Commit to the main only the code that **compile without any warnings or errors**.
-- [ ] To test, compile or flash the code use [online mBed compiler](https://www.ide.mbed.com/compiler)
+- Commit to the main only the code that **compile without any warnings or errors**.
+- To test, compile or flash the code use [online mBed compiler](https://www.ide.mbed.com/compiler)

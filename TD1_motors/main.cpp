@@ -153,8 +153,8 @@ void pwm_test() {
 void motor_test() {
     Motor motor1(PIN_MOTOR1_MODE, PIN_MOTOR1_DIR, PIN_MOTOR1_PWM, SWITCHING_FREQUENCY);
     Motor motor2(PIN_MOTOR2_MODE, PIN_MOTOR2_DIR, PIN_MOTOR2_PWM, SWITCHING_FREQUENCY);
-    Encoder wheel1(PIN_ENCODER1_CHA, PIN_ENCODER1_CHA, SAMPLING_FREQUENCY);
-    Encoder wheel2(PIN_ENCODER2_CHA, PIN_ENCODER2_CHA, SAMPLING_FREQUENCY);
+    Encoder wheel1(PIN_ENCODER1_CHA, PIN_ENCODER1_CHB, SAMPLING_FREQUENCY);
+    Encoder wheel2(PIN_ENCODER2_CHA, PIN_ENCODER2_CHB, SAMPLING_FREQUENCY);
 
     motor1.setDirection(FORWARD);   // Test motors for FORWARD and BACKWARD directions
     motor2.setDirection(FORWARD);
@@ -171,8 +171,8 @@ void motor_test() {
 
             lcd.cls(); //Clear the screen and display encoders readings [m/s]
             lcd.locate(0, 0);
-            lcd.printf("M1 vel = %.2lf\n", wheel1.getVelocity());
-            lcd.printf("M2 vel = %.2lf", wheel2.getVelocity());
+            lcd.printf("M1 vel = %.2lf m/s\n", wheel1.getVelocity());
+            lcd.printf("M2 vel = %.2lf m/s", wheel2.getVelocity());
         }
 
         motor1.setDirection(BACKWARD);
@@ -184,11 +184,11 @@ void motor_test() {
 /* ----------------------- Main function ----------------------- */
 int main() {
 
-    // 
+    // pwm_test();
     // motor_test();
     // square_path();
 
     while(1) {  // Main while loop of the program
-        pwm_test();
+        motor_test();
     }
 }

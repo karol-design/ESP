@@ -5,7 +5,6 @@
  * Date: 05/02/2022
  */
 
-TEST
 
 /* ------------------- Pre-processor directives ------------------- */
 #include "mbed.h"   // Mbed library

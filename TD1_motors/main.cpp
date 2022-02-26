@@ -1,47 +1,50 @@
 /* Technical Demonstration 1 - Motors
  * Description: STM32 firmware for PWM and Motors control and encoders test
  * Classes: Pwm, Encoder, Motor
- * Functions: pwm_test, motor_test, encoder_test, square_path
+ * Functions: pwm_test, motor_test, square_path
  * Last modification: 26/02/2022
  */
 
 
-/* ------------------- Pre-processor directives ------------------- */
+/* ------------------------------- Pre-processor directives ------------------------------- */
 #include "mbed.h"   // Mbed library
 #include "C12832.h" // LCD screen library
-#include "QEI.h"    // Quadrature Encoder Library
 
 #define FORWARD 1   // Forward/backward direction pin logic value (for Motor class)
 #define BACKWARD 0
 #define BIPOLAR 1   // Bipolar/unipolar mode pin logic value (for Motor class)
 #define UNIPOLAR 0
 
-// Pin numbers definition
-#define PIN_MOTOR_L_PWM PB_15 // PWM1/3 connected pin
+// Definition of pins used for "STM32 - Subsystems" interface 
+#define PIN_MOTOR_L_PWM PB_15   // Pin connected to PWM1/3
 #define PIN_MOTOR_L_MODE PB_14
 #define PIN_MOTOR_L_DIR PB_13
 
-#define PIN_MOTOR_R_PWM PC_8 // PWM3/3 connected pin
+#define PIN_MOTOR_R_PWM PC_8    // Pin connected to PWM3/3
 #define PIN_MOTOR_R_MODE PC_6
 #define PIN_MOTOR_R_DIR PC_5
 
 #define PIN_ENCODER_L_CHA PC_14
 #define PIN_ENCODER_R_CHA PC_10
 
-#define SAMPLING_FREQUENCY 1        // Velocity measurement sampling frequency
+// Physical characteristic 
+#define WHEEL_RADIUS 1.59f          // Wheel radius (for velocity measurement) [m]
 
-#define SWITCHING_FREQUENCY 10000.0f  // Set PWM switching frequency to 10 kHz (100 us period)
+// Velocity measurement config
+#define SAMPLING_FREQUENCY 1        // Velocity measurement sampling frequency [Hz]
+#define PULSES_DELTA_T_US 500000    // Delta t for pulses/s measurement [us]
+#define MAX_VELOCITY 10.0f          // Maximum velocity (for normalised velocity) [m/s]
 #define PULSES_PER_REV 256          // No. of quadrature encoder pulses per revolution
-#define WHEEL_RADIUS 1.59f          // Wheel radius (for velocity measurement)
 #define PI 3.141592f                // Pi value (for velocity measurement)
-#define MAX_VELOCITY 10.0f          // Maximum velocity in m/s (for normalised velocity)
-#define PULSES_DELTA_T_US 500000    // Delta t (in us) for pulses/s measurement - the wheel makes ~10 revolutions/s
+
+// Motors control config
+#define SWITCHING_FREQUENCY 10000.0f  // Set PWM switching frequency to 10 kHz (100 us period) [Hz]
 
 
 C12832 lcd(D11, D13, D12, D7, D10); // LCD Initialisation (pin assignment)
 
 
-/* ----------------------- Pwm class ----------------------- */
+/* ------------------------------- Pwm class ------------------------------- */
 class Pwm {
 
 private:
@@ -60,25 +63,26 @@ public:
     }
 };
 
-/* ----------------------- Encoder class ----------------------- */
+
+/* ------------------------------- Encoder class ------------------------------- */
 class Encoder {
 
 private:
-    InterruptIn channelA;
-    Ticker sampler;     // Ticker object to regularly sample current wheel velocity 
-    Timeout pulsesDt;   // Timeout object to measure delta t, when measureing pulses/s
-    int pulse_count;    // Pulses counter
-    int _pulses_per_s;  // Pulses per second
+    InterruptIn channelA;   // Interrupt channel to receive pulses from the encoder
+    Ticker sampler;         // Ticker object to regularly sample current wheel velocity 
+    Timeout pulsesDt;       // Timeout object to measure delta t, when measureing pulses/s
+    int pulse_count;        // Pulses counter
+    int _pulses_per_s;      // Pulses per second
     float _velocity, _velocity_norm;                // Wheel velocity in m/s and normalised (0.0 - 1.0)
     float _sampling_frequency, _sampling_period;    // Sampling frequency and period
     
-    void incrementCounter() {   // Increment the pulse counter
-        ++pulse_count;
+    void incrementCounter() {
+        ++pulse_count;      // Increment the pulse counter
     }
     
     void samplePulses() {
-        pulse_count = 0;  // Reset pulses counter
-        pulsesDt.attach_us(callback(this, &Encoder::calcVelocity), PULSES_DELTA_T_US);   // Start timeout for calling calcVelocity func
+        pulse_count = 0;    // Reset pulses counter
+        pulsesDt.attach_us(callback(this, &Encoder::calcVelocity), PULSES_DELTA_T_US);  // Start timeout for calling calcVelocity func
     }
 
     void calcVelocity() {
@@ -89,7 +93,7 @@ private:
 public:
     Encoder(PinName chA, float sf) : channelA(chA), _sampling_frequency(sf) {
         channelA.rise(callback(this, &Encoder::incrementCounter));  // Increment the counter each time channelA goes high (pulse)
-        _sampling_period = (1.00f / _sampling_frequency);   // Period = 1 / frequency
+        _sampling_period = (1.00f / _sampling_frequency);           // Period = 1 / frequency
         sampler.attach(callback(this, &Encoder::samplePulses), _sampling_period);   // Start a ticker to regularly sample velocity
     }
 
@@ -107,7 +111,7 @@ public:
 };
 
 
-/* ----------------------- Motor class ----------------------- */
+/* ------------------------------- Motor class ------------------------------- */
 class Motor {
 
 private:
@@ -137,7 +141,7 @@ public:
 };
 
 
-/* ----------------------- pwm_test function ----------------------- */
+/* ------------------------------- pwm_test function ------------------------------- */
 void pwm_test() {
     Pwm pwmLeft(PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY); // Two PWM channels, f = SWITCHING_FREQUENCY
     Pwm pwmRight(PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
@@ -154,7 +158,7 @@ void pwm_test() {
 }
 
 
-/* ----------------------- motor_test function ----------------------- */
+/* ------------------------------- motor_test function ------------------------------- */
 void motor_test() {
     Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
     Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
@@ -183,20 +187,17 @@ void motor_test() {
             lcd.printf("%.2lf", wheelRight.getVelocity());
         }
 
-        motorLeft.setDirection(BACKWARD);
+        motorLeft.setDirection(FORWARD); // Spin the buggy
         motorRight.setDirection(BACKWARD);
     }
 }
 
 
-/* ----------------------- Main function ----------------------- */
+/* ------------------------------- Main function ------------------------------- */
 int main() {
 
-    // pwm_test();
-    // motor_test();
-    // square_path();
+    motor_test();   // Test functions: pwm_test(), motor_test(), square_path();
 
-    while(1) {  // Main while loop of the program
-        motor_test();
-    }
+    while(1) {}     // Main while loop of the program
+
 }

@@ -158,32 +158,30 @@ void pwm_test() {
 
 /* ----------------------- motor_test function ----------------------- */
 void motor_test() {
-    Motor motor1(PIN_MOTOR1_MODE, PIN_MOTOR1_DIR, PIN_MOTOR1_PWM, SWITCHING_FREQUENCY);
-    Motor motor2(PIN_MOTOR2_MODE, PIN_MOTOR2_DIR, PIN_MOTOR2_PWM, SWITCHING_FREQUENCY);
-    Encoder wheel1(PIN_ENCODER1_CHA, PIN_ENCODER1_CHB, SAMPLING_FREQUENCY);
-    Encoder wheel2(PIN_ENCODER2_CHA, PIN_ENCODER2_CHB, SAMPLING_FREQUENCY);
+    Motor motorLeft(PIN_MOTOR1_MODE, PIN_MOTOR1_DIR, PIN_MOTOR1_PWM, SWITCHING_FREQUENCY);
+    Motor motorRight(PIN_MOTOR2_MODE, PIN_MOTOR2_DIR, PIN_MOTOR2_PWM, SWITCHING_FREQUENCY);
+    Encoder wheelLeft(PIN_ENCODER1_CHA, PIN_ENCODER1_CHB, SAMPLING_FREQUENCY);
+    Encoder wheelRight(PIN_ENCODER2_CHA, PIN_ENCODER2_CHB, SAMPLING_FREQUENCY);
 
     motor1.setDirection(FORWARD);   // Test motors for FORWARD and BACKWARD directions
     motor2.setDirection(FORWARD);
 
     lcd.cls(); //Clear the screen and display encoders readings [m/s]
     lcd.locate(0, 0);
-    lcd.printf("M1 vel = %.2lf m/s", wheel1.getVelocity());
+    lcd.printf("Motor Left v = %.2lf m/s", wheel1.getVelocity());
     lcd.locate(0, 10);
-    lcd.printf("M2 vel = %.2lf m/s", wheel2.getVelocity());
+    lcd.printf("Motor Right v = %.2lf m/s", wheel2.getVelocity());
 
     for(int i = 0; i<2; i++) {
         for(int i = 0; i < 100; i++) {  // Test the entire range of speed: 0.0 - 1.0 
             float speed = ((float) i / 100.0f);    // Map i value (0-100) to duty_cycle (0.0 - 1.0) 
-            motor1.setSpeed(speed);     // Set the speed for motor1
-
-            speed = 1.0f - speed;       // For motor2 test the speed from 1.0 to 0.0
-            motor2.setSpeed(speed);     // Set the speed for motor2
+            motorLeft.setSpeed(speed);     // Set the speed for motor1
+            motorRight.setSpeed(speed);     // Set the speed for motor2
 
             wait(0.1);
-            lcd.locate(44, 0); // Display only readings as they change
-            lcd.printf("%.2lf", wheel1.getVelocity());
-            lcd.locate(44, 10);
+            lcd.locate(64, 0); // Display only readings as they change
+            lcd.printf("%.2lf", wheelLeft.getVelocity());
+            lcd.locate(64, 10);
             lcd.printf("%.2lf", wheel2.getVelocity());
         }
 

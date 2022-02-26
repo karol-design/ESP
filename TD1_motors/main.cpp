@@ -168,9 +168,9 @@ void motor_test() {
 
     lcd.cls(); //Clear the screen and display encoders readings [m/s]
     lcd.locate(0, 0);
-    lcd.printf("Motor Left v = %.2lf m/s", wheel1.getVelocity());
+    lcd.printf("Motor Left v = %.2lf m/s", wheelleft.getVelocity());
     lcd.locate(0, 10);
-    lcd.printf("Motor Right v = %.2lf m/s", wheel2.getVelocity());
+    lcd.printf("Motor Right v = %.2lf m/s", wheelRight.getVelocity());
 
     for(int i = 0; i<2; i++) {
         for(int i = 0; i < 100; i++) {  // Test the entire range of speed: 0.0 - 1.0 

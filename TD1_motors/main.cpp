@@ -107,7 +107,7 @@ public:
         pulse_count = 0;    // Reset pulses counter
     }
 
-    void getCounter(void) const {
+    int getCounter(void) const {
         return pulse_count; // Return pulse counter value
     }
 

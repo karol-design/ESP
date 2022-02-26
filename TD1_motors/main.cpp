@@ -65,10 +65,10 @@ public:
 class Encoder {
 
 private:
-    InterruptIn channelA(p5);
+    InterruptIn channelA;
     Ticker sampler;     // Ticker object to regularly sample current wheel velocity 
     Timeout pulsesDt;   // Timeout object to measure delta t, when measureing pulses/s
-    int pulse_count = 0;    // Pulses counter
+    int pulse_count;    // Pulses counter
     int _pulses_per_s;  // Pulses per second
     float _velocity, _velocity_norm;                // Wheel velocity in m/s and normalised (0.0 - 1.0)
     float _sampling_frequency, _sampling_period;    // Sampling frequency and period
@@ -196,5 +196,6 @@ int main() {
     // square_path();
 
     while(1) {  // Main while loop of the program
+        motor_test();
     }
 }

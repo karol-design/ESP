@@ -168,7 +168,7 @@ void motor_test() {
 
     lcd.cls(); //Clear the screen and display encoders readings [m/s]
     lcd.locate(0, 0);
-    lcd.printf("Motor Left v = %.2lf m/s", wheelleft.getVelocity());
+    lcd.printf("Motor Left v = %.2lf m/s", wheelLeft.getVelocity());
     lcd.locate(0, 10);
     lcd.printf("Motor Right v = %.2lf m/s", wheelRight.getVelocity());
 
@@ -182,7 +182,7 @@ void motor_test() {
             lcd.locate(64, 0); // Display only readings as they change
             lcd.printf("%.2lf", wheelLeft.getVelocity());
             lcd.locate(64, 10);
-            lcd.printf("%.2lf", wheel2.getVelocity());
+            lcd.printf("%.2lf", wheelRight.getVelocity());
         }
 
         motorLeft.setDirection(BACKWARD);

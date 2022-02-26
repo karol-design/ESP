@@ -190,6 +190,14 @@ void motor_test() {
         motorLeft.setDirection(FORWARD); // Spin the buggy
         motorRight.setDirection(BACKWARD);
     }
+
+    while(1) {  // Allow tests of encoders without running motors 
+        wait(0.1);
+        lcd.locate(74, 0); // Display only readings as they change
+        lcd.printf("%.2lf", wheelLeft.getVelocity());
+        lcd.locate(74, 10);
+        lcd.printf("%.2lf", wheelRight.getVelocity());
+    }
 }
 
 

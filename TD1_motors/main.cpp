@@ -191,6 +191,5 @@ int main() {
     // square_path();
 
     while(1) {  // Main while loop of the program
-        motor_test();
     }
 }

@@ -33,7 +33,6 @@
 // Velocity measurement config
 #define SAMPLING_FREQUENCY 1        // Velocity measurement sampling frequency [Hz]
 #define PULSES_DELTA_T_US 500000    // Delta t for pulses/s measurement [us]
-#define MAX_VELOCITY 10.0f          // Maximum velocity (for normalised velocity) [m/s]
 #define PULSES_PER_REV 256          // No. of quadrature encoder pulses per revolution
 #define PI 3.141592f                // Pi value (for velocity measurement)
 
@@ -99,14 +98,6 @@ public:
 
     float getVelocity(void) const { // Get most recent velocity in m/s
         return _velocity;
-    }
-
-    float getVelocityNorm(void) const { // Get most recent velocity normalised (0.0 - 1.0)
-        if (_velocity < MAX_VELOCITY) {
-            return (_velocity / MAX_VELOCITY);
-        } else {
-            return -1;  // Return an error (-1) if the velocity is outside normalised range
-        }
     }
 };
 

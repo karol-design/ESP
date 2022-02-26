@@ -141,7 +141,8 @@ public:
         _direction_pin = direction;
     }
 
-    void setSpeed(float speed) { // Set speed (0.0 - 1.0)
+    void setSpeed(float speed) {    // Set speed (0.0 - 1.0)
+        speed = 1.0 - speed;        // Duty cycle reversed, i.e. 100% duty cycle disables the motor
         _motor.setDutyCycle(speed);
     }
 };
@@ -176,9 +177,9 @@ void motor_test() {
 
     lcd.cls(); //Clear the screen and display encoders readings [m/s]
     lcd.locate(0, 0);
-    lcd.printf("Motor Left v =  %.2lf m/s", wheelLeft.getVelocity());
+    lcd.printf("Motor Left v =  %5.2lf m/s", wheelLeft.getVelocity());
     lcd.locate(0, 10);
-    lcd.printf("Motor Right v = %.2lf m/s", wheelRight.getVelocity());
+    lcd.printf("Motor Right v = %5.2lf m/s", wheelRight.getVelocity());
 
     for(int i = 0; i<2; i++) {
         for(int i = 0; i < 100; i++) {  // Test the entire range of speed: 0.0 - 1.0 
@@ -200,9 +201,9 @@ void motor_test() {
     while(1) {  // Allow tests of encoders without running motors 
         wait(0.1);
         lcd.locate(74, 0); // Display only readings as they change
-        lcd.printf("%.2lf", wheelLeft.getVelocity());
+        lcd.printf("%5.2lf", wheelLeft.getVelocity());  // Display the velocity as 5 characters, i.e. xx.xx
         lcd.locate(74, 10);
-        lcd.printf("%.2lf", wheelRight.getVelocity());
+        lcd.printf("%5.2lf", wheelRight.getVelocity());
     }
 }
 

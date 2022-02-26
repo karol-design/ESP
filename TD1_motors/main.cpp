@@ -173,7 +173,7 @@ void motor_test() {
     lcd.printf("M2 vel = %.2lf m/s", wheel2.getVelocity());
 
     for(int i = 0; i<2; i++) {
-        for(int i = 0; i < 60; i++) {  // Test the entire range of speed: 0.0 - 1.0 
+        for(int i = 0; i < 100; i++) {  // Test the entire range of speed: 0.0 - 1.0 
             float speed = ((float) i / 100.0f);    // Map i value (0-100) to duty_cycle (0.0 - 1.0) 
             motor1.setSpeed(speed);     // Set the speed for motor1
 

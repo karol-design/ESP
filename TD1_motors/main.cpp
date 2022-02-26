@@ -166,6 +166,12 @@ void motor_test() {
     motor1.setDirection(FORWARD);   // Test motors for FORWARD and BACKWARD directions
     motor2.setDirection(FORWARD);
 
+    lcd.cls(); //Clear the screen and display encoders readings [m/s]
+    lcd.locate(0, 0);
+    lcd.printf("M1 vel = %.2lf m/s", wheel1.getVelocity());
+    lcd.locate(0, 10);
+    lcd.printf("M2 vel = %.2lf m/s", wheel2.getVelocity());
+
     for(int i = 0; i<2; i++) {
         for(int i = 0; i < 100; i++) {  // Test the entire range of speed: 0.0 - 1.0 
             float speed = ((float) i / 100.0f);    // Map i value (0-100) to duty_cycle (0.0 - 1.0) 
@@ -175,12 +181,9 @@ void motor_test() {
             motor2.setSpeed(speed);     // Set the speed for motor2
 
             wait(0.1);
-
-            lcd.cls(); //Clear the screen and display encoders readings [m/s]
-            lcd.locate(0, 0);
-            lcd.printf("M1 vel = %.2lf m/s", wheel1.getVelocity());
-            lcd.locate(0, 10);
-            lcd.printf("M2 vel = %.2lf m/s", wheel2.getVelocity());
+            lcd.locate(30, 0);
+            lcd.printf("%.2lf", wheel2.getVelocity());
+            
         }
 
         motor1.setDirection(BACKWARD);

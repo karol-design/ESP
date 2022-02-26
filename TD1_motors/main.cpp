@@ -16,27 +16,28 @@
 #define BIPOLAR 1   // Bipolar/unipolar mode pin logic value (for Motor class)
 #define UNIPOLAR 0
 
-#define PIN_MOTOR1_PWM PA_13   // Define the interface - pin names
-#define PIN_MOTOR1_MODE PA_14
-#define PIN_MOTOR1_DIR PA_15
+// Pin numbers definition
+#define PIN_MOTOR1_PWM PB_15 // PWM1/3 connected pin
+#define PIN_MOTOR1_MODE PB_14
+#define PIN_MOTOR1_DIR PB_13
 
-#define PIN_MOTOR2_PWM PC_5
+#define PIN_MOTOR2_PWM PC_8 // PWM3/3 connected pin
 #define PIN_MOTOR2_MODE PC_6
-#define PIN_MOTOR2_DIR PC_8
+#define PIN_MOTOR2_DIR PC_5
 
 #define PIN_ENCODER1_CHA PC_14
 #define PIN_ENCODER1_CHB PC_15
 #define PIN_ENCODER2_CHA PC_10
 #define PIN_ENCODER2_CHB PC_12
 
-#define SAMPLING_FREQUENCY 100      // Velocity measurement sampling frequency
+#define SAMPLING_FREQUENCY 1        // Velocity measurement sampling frequency
 
 #define SWITCHING_FREQUENCY 10000.0f  // Set PWM switching frequency to 10 kHz (100 us period)
 #define PULSES_PER_REV 256          // No. of quadrature encoder pulses per revolution
 #define WHEEL_RADIUS 0.16f          // Wheel radius (for velocity measurement)
 #define PI 3.141592f                // Pi value (for velocity measurement)
 #define MAX_VELOCITY 10.0f          // Maximum velocity in m/s (for normalised velocity)
-#define PULSES_DELTA_T_US 1000      // Delta t (in us) for pulses/s measurement - the wheel makes ~10 revolutions/s
+#define PULSES_DELTA_T_US 500000    // Delta t (in us) for pulses/s measurement - the wheel makes ~10 revolutions/s
 
 
 C12832 lcd(D11, D13, D12, D7, D10); // LCD Initialisation (pin assignment)

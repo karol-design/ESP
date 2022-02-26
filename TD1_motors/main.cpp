@@ -181,9 +181,10 @@ void motor_test() {
             motor2.setSpeed(speed);     // Set the speed for motor2
 
             wait(0.1);
-            lcd.locate(30, 0);
+            lcd.locate(44, 0); // Display only readings as they change
+            lcd.printf("%.2lf", wheel1.getVelocity());
+            lcd.locate(44, 10);
             lcd.printf("%.2lf", wheel2.getVelocity());
-            
         }
 
         motor1.setDirection(BACKWARD);

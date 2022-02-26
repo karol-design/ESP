@@ -19,11 +19,14 @@ This is the code to be used during the first technical demonstration. Presentati
 
 ### Naming convention in the project
 - macros - MACRO_NAME
+-------------------------------------------
 - classes - ClassName
-- functions - function_name
+- objects - objectName
 - member functions - functionName
-- variables - variable_name
 - private data members - _variable_name
+-------------------------------------------
+- variables - variable_name
+- functions - function_name
 
 ### Contributing and testing requirements
 - Commit to the main only the code that **compile without any warnings or errors**.

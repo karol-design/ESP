@@ -17,18 +17,16 @@
 #define UNIPOLAR 0
 
 // Pin numbers definition
-#define PIN_MOTOR1_PWM PB_15 // PWM1/3 connected pin
-#define PIN_MOTOR1_MODE PB_14
-#define PIN_MOTOR1_DIR PB_13
+#define PIN_MOTOR_L_PWM PB_15 // PWM1/3 connected pin
+#define PIN_MOTOR_L_MODE PB_14
+#define PIN_MOTOR_L_DIR PB_13
 
-#define PIN_MOTOR2_PWM PC_8 // PWM3/3 connected pin
-#define PIN_MOTOR2_MODE PC_6
-#define PIN_MOTOR2_DIR PC_5
+#define PIN_MOTOR_R_PWM PC_8 // PWM3/3 connected pin
+#define PIN_MOTOR_R_MODE PC_6
+#define PIN_MOTOR_R_DIR PC_5
 
-#define PIN_ENCODER1_CHA PC_14
-#define PIN_ENCODER1_CHB PC_15
-#define PIN_ENCODER2_CHA PC_10
-#define PIN_ENCODER2_CHB PC_12
+#define PIN_ENCODER_L_CHA PC_14
+#define PIN_ENCODER_R_CHA PC_10
 
 #define SAMPLING_FREQUENCY 1        // Velocity measurement sampling frequency
 
@@ -89,7 +87,7 @@ private:
     }
 
 public:
-    Encoder(PinName chA, PinName chB, float sf) : channelA(chA), _sampling_frequency(sf) {
+    Encoder(PinName chA, float sf) : channelA(chA), _sampling_frequency(sf) {
         channelA.rise(callback(this, &Encoder::incrementCounter));  // Increment the counter each time channelA goes high (pulse)
         _sampling_period = (1.00f / _sampling_frequency);   // Period = 1 / frequency
         sampler.attach(callback(this, &Encoder::samplePulses), _sampling_period);   // Start a ticker to regularly sample velocity
@@ -141,15 +139,15 @@ public:
 
 /* ----------------------- pwm_test function ----------------------- */
 void pwm_test() {
-    Pwm pwm1(PIN_MOTOR1_PWM, SWITCHING_FREQUENCY); // Two PWM channels, f = SWITCHING_FREQUENCY
-    Pwm pwm2(PIN_MOTOR2_PWM, SWITCHING_FREQUENCY);
+    Pwm pwmLeft(PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY); // Two PWM channels, f = SWITCHING_FREQUENCY
+    Pwm pwmRight(PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
 
     for(int i = 0; i < 100; i++) {  // Test the entire range of duty cycle (DC): 0.0 - 1.0 
         float duty_cycle = ((float) i / 100.0f);    // Map i value (0-100) to duty_cycle (0.0 - 1.0) 
-        pwm1.setDutyCycle(duty_cycle);  // Set the DC for pwm1
+        pwmLeft.setDutyCycle(duty_cycle);  // Set the DC for pwm1
 
         duty_cycle = 1.0f - duty_cycle; // For pwm2 test the DC from (1.0 - 0.0) 
-        pwm2.setDutyCycle(duty_cycle);  // Set the DC for pwm2
+        pwmRight.setDutyCycle(duty_cycle);  // Set the DC for pwm2
 
         wait(0.1);  // Test procedure duration is 10 seconds
     }
@@ -158,17 +156,17 @@ void pwm_test() {
 
 /* ----------------------- motor_test function ----------------------- */
 void motor_test() {
-    Motor motorLeft(PIN_MOTOR1_MODE, PIN_MOTOR1_DIR, PIN_MOTOR1_PWM, SWITCHING_FREQUENCY);
-    Motor motorRight(PIN_MOTOR2_MODE, PIN_MOTOR2_DIR, PIN_MOTOR2_PWM, SWITCHING_FREQUENCY);
-    Encoder wheelLeft(PIN_ENCODER1_CHA, PIN_ENCODER1_CHB, SAMPLING_FREQUENCY);
-    Encoder wheelRight(PIN_ENCODER2_CHA, PIN_ENCODER2_CHB, SAMPLING_FREQUENCY);
+    Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
+    Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
+    Encoder wheelLeft(PIN_ENCODER_L_CHA, SAMPLING_FREQUENCY);
+    Encoder wheelRight(PIN_ENCODER_R_CHA, SAMPLING_FREQUENCY);
 
     motorLeft.setDirection(FORWARD);   // Test motors for FORWARD and BACKWARD directions
     motorRight.setDirection(FORWARD);
 
     lcd.cls(); //Clear the screen and display encoders readings [m/s]
     lcd.locate(0, 0);
-    lcd.printf("Motor Left v = %.2lf m/s", wheelLeft.getVelocity());
+    lcd.printf("Motor Left v =  %.2lf m/s", wheelLeft.getVelocity());
     lcd.locate(0, 10);
     lcd.printf("Motor Right v = %.2lf m/s", wheelRight.getVelocity());
 
@@ -179,9 +177,9 @@ void motor_test() {
             motorRight.setSpeed(speed);     // Set the speed for motor2
 
             wait(0.1);
-            lcd.locate(64, 0); // Display only readings as they change
+            lcd.locate(74, 0); // Display only readings as they change
             lcd.printf("%.2lf", wheelLeft.getVelocity());
-            lcd.locate(64, 10);
+            lcd.locate(74, 10);
             lcd.printf("%.2lf", wheelRight.getVelocity());
         }
 

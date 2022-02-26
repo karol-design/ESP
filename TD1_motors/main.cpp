@@ -163,8 +163,8 @@ void motor_test() {
     Encoder wheelLeft(PIN_ENCODER1_CHA, PIN_ENCODER1_CHB, SAMPLING_FREQUENCY);
     Encoder wheelRight(PIN_ENCODER2_CHA, PIN_ENCODER2_CHB, SAMPLING_FREQUENCY);
 
-    motor1.setDirection(FORWARD);   // Test motors for FORWARD and BACKWARD directions
-    motor2.setDirection(FORWARD);
+    motorLeft.setDirection(FORWARD);   // Test motors for FORWARD and BACKWARD directions
+    motorRight.setDirection(FORWARD);
 
     lcd.cls(); //Clear the screen and display encoders readings [m/s]
     lcd.locate(0, 0);
@@ -185,8 +185,8 @@ void motor_test() {
             lcd.printf("%.2lf", wheel2.getVelocity());
         }
 
-        motor1.setDirection(BACKWARD);
-        motor2.setDirection(BACKWARD);
+        motorLeft.setDirection(BACKWARD);
+        motorRight.setDirection(BACKWARD);
     }
 }
 

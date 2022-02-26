@@ -31,8 +31,8 @@
 #define WHEEL_RADIUS 1.59f          // Wheel radius (for velocity measurement) [m]
 
 // Velocity measurement config
-#define SAMPLING_FREQUENCY 1        // Velocity measurement sampling frequency [Hz]
-#define PULSES_DELTA_T_US 500000    // Delta t for pulses/s measurement [us]
+#define SAMPLING_FREQUENCY 2        // Velocity measurement sampling frequency [Hz]
+#define PULSES_DELTA_T_US 400000    // Delta t for pulses/s measurement [us]
 #define PULSES_PER_REV 256          // No. of quadrature encoder pulses per revolution
 #define PI 3.141592f                // Pi value (for velocity measurement)
 

@@ -34,7 +34,7 @@
 
 #define SWITCHING_FREQUENCY 10000.0f  // Set PWM switching frequency to 10 kHz (100 us period)
 #define PULSES_PER_REV 256          // No. of quadrature encoder pulses per revolution
-#define WHEEL_RADIUS 0.16f          // Wheel radius (for velocity measurement)
+#define WHEEL_RADIUS 1.59f          // Wheel radius (for velocity measurement)
 #define PI 3.141592f                // Pi value (for velocity measurement)
 #define MAX_VELOCITY 10.0f          // Maximum velocity in m/s (for normalised velocity)
 #define PULSES_DELTA_T_US 500000    // Delta t (in us) for pulses/s measurement - the wheel makes ~10 revolutions/s

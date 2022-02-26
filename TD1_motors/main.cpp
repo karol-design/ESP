@@ -100,8 +100,10 @@ public:
         return _velocity;
     }
 
+    // Methods to start, stop and read raw counter value instead (for precise manouvers, e.g. turning 180 deg)
+
     void startCounter(void) {  // Stop regular velocity measurements and start pulse counter
-        sampler.detach();   // Stop a ticker and regular velocity sampling
+        sampler.detach();   // Stop a ticker which regularly sample velocity
         pulse_count = 0;    // Reset pulses counter
     }
 

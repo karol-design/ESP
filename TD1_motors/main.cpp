@@ -33,7 +33,7 @@
 
 #define SWITCHING_FREQUENCY 10000.0f  // Set PWM switching frequency to 10 kHz (100 us period)
 #define PULSES_PER_REV 256          // No. of quadrature encoder pulses per revolution
-#define WHEEL_RADIUS 0.05f          // Wheel radius (for velocity measurement)
+#define WHEEL_RADIUS 0.16f          // Wheel radius (for velocity measurement)
 #define PI 3.141592f                // Pi value (for velocity measurement)
 #define MAX_VELOCITY 10.0f          // Maximum velocity in m/s (for normalised velocity)
 #define PULSES_DELTA_T_US 1000      // Delta t (in us) for pulses/s measurement - the wheel makes ~10 revolutions/s
@@ -61,31 +61,36 @@ public:
     }
 };
 
-
 /* ----------------------- Encoder class ----------------------- */
 class Encoder {
 
 private:
-    QEI wheel;          // Quadrature Encoder API
+    InterruptIn channelA(p5);
     Ticker sampler;     // Ticker object to regularly sample current wheel velocity 
     Timeout pulsesDt;   // Timeout object to measure delta t, when measureing pulses/s
+    int pulse_count = 0;    // Pulses counter
     int _pulses_per_s;  // Pulses per second
     float _velocity, _velocity_norm;                // Wheel velocity in m/s and normalised (0.0 - 1.0)
     float _sampling_frequency, _sampling_period;    // Sampling frequency and period
     
+    void incrementCounter() {   // Increment the pulse counter
+        ++pulse_count;
+    }
+    
     void samplePulses() {
-        wheel.reset();  // Reset pulses counter
+        pulse_count = 0;  // Reset pulses counter
         pulsesDt.attach_us(callback(this, &Encoder::calcVelocity), PULSES_DELTA_T_US);   // Start timeout for calling calcVelocity func
     }
 
     void calcVelocity() {
-        _pulses_per_s = (wheel.getPulses() * 1000000 / (int) PULSES_DELTA_T_US); // Divide pulses counter by Dt
+        _pulses_per_s = (pulse_count * 1000000 / (int) PULSES_DELTA_T_US); // Divide pulses counter by Dt
         _velocity = ( ((float) _pulses_per_s / PULSES_PER_REV) * (2.0f * PI * WHEEL_RADIUS) ); // Multiply rev/s by wheel circumference
     }
 
 public:
-    Encoder(PinName chA, PinName chB, float sf) : wheel(chA, chB, NC, PULSES_PER_REV), _sampling_frequency(sf) {
-        _sampling_period = (1.00f / _sampling_frequency);
+    Encoder(PinName chA, PinName chB, float sf) : channelA(chA), _sampling_frequency(sf) {
+        channelA.rise(callback(this, &Encoder::incrementCounter));  // Increment the counter each time channelA goes high (pulse)
+        _sampling_period = (1.00f / _sampling_frequency);   // Period = 1 / frequency
         sampler.attach(callback(this, &Encoder::samplePulses), _sampling_period);   // Start a ticker to regularly sample velocity
     }
 

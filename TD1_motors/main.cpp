@@ -198,34 +198,44 @@ void square_path() {
     Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
     Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
 
-    motorLeft.setDirection(FORWARD);   // Test motors for FORWARD and BACKWARD directions
-    motorRight.setDirection(FORWARD);
     
     for(int i = 1; i < 9; i++) {
-        motorLeft.setSpeed(1.0);     // Set the speed for motor1
-        motorRight.setSpeed(1.0);     // Set the speed for motor2
+        motorLeft.setDirection(FORWARD);
+        motorRight.setDirection(FORWARD);
+        motorLeft.setSpeed(0.2);     // Set the speed for motor1
+        motorRight.setSpeed(0.21);     // Set the speed for motor2
     
-        wait(5); // CHANGE TO SEE WHEN 0.5 m IS!!!
+        wait(2.75); // CHANGE TO SEE WHEN 0.5 m IS!!!
     
         // STOP
         motorLeft.setSpeed(0);     // Set the speed for motor1
         motorRight.setSpeed(0);     // Set the speed for motor2
         if (i < 4){  
             // TURN LEFT
-            motorRight.setSpeed(60);     // Set the speed for motor2
-            wait(1); // WAIT UNTIL BUGGY TURNED 90 DEGREES
+            motorLeft.setDirection(BACKWARD);
+            motorRight.setSpeed(0.2);     // Set the speed for motor2
+            motorLeft.setSpeed(0.3);
+            wait(1.1); // WAIT UNTIL BUGGY TURNED 90 DEGREES
             motorRight.setSpeed(0);
+            motorLeft.setSpeed(0);
         } else if (i == 4){
-            motorLeft.setSpeed(60);
-            wait(3); // WAIT UNTIL BUGGY TURNED 180 DEGREES
+            motorRight.setDirection(BACKWARD);
+            motorRight.setSpeed(0.3);
+            motorLeft.setSpeed(0.2);
+            wait(1.95); // WAIT UNTIL BUGGY TURNED 180 DEGREES
             motorLeft.setSpeed(0);     // Set the speed for motor1
+            motorRight.setSpeed(0);
         } else if (i == 8){
                 // IDLE AT FINISH POINT
+            motorLeft.setSpeed(0);    // STOP
+            motorRight.setSpeed(0);
         } else { 
-            motorLeft.setSpeed(60);
-            wait(1); // WAIT UNTIL BUGGY TURNED 90 DEGREES
-            motorLeft.setSpeed(0);     // Set the speed for motor2
-        // CONTINUE
+            motorRight.setDirection(BACKWARD);
+            motorLeft.setSpeed(0.2);
+            motorRight.setSpeed(0.3);
+            wait(1.1); // WAIT UNTIL BUGGY TURNED 90 DEGREES
+            motorLeft.setSpeed(0);     
+            motorRight.setSpeed(0);
         }
     }
 }
@@ -234,7 +244,7 @@ void square_path() {
 /* ------------------------------- Main function ------------------------------- */
 int main() {
 
-    motor_test();   // Test functions: motor_test(), square_path();
+    square_path();   // Test functions: motor_test(), square_path();
 
     while(1) {}     // Main while loop of the program
     

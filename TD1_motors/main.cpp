@@ -148,23 +148,6 @@ public:
 };
 
 
-/* ------------------------------- pwm_test function ------------------------------- */
-void pwm_test() {
-    Pwm pwmLeft(PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY); // Two PWM channels, f = SWITCHING_FREQUENCY
-    Pwm pwmRight(PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
-
-    for(int i = 0; i < 100; i++) {  // Test the entire range of duty cycle (DC): 0.0 - 1.0 
-        float duty_cycle = ((float) i / 100.0f);    // Map i value (0-100) to duty_cycle (0.0 - 1.0) 
-        pwmLeft.setDutyCycle(duty_cycle);  // Set the DC for pwm1
-
-        duty_cycle = 1.0f - duty_cycle; // For pwm2 test the DC from (1.0 - 0.0) 
-        pwmRight.setDutyCycle(duty_cycle);  // Set the DC for pwm2
-
-        wait(0.1);  // Test procedure duration is 10 seconds
-    }
-}
-
-
 /* ------------------------------- motor_test function ------------------------------- */
 void motor_test() {
     Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
@@ -211,7 +194,7 @@ void motor_test() {
 /* ------------------------------- Main function ------------------------------- */
 int main() {
 
-    motor_test();   // Test functions: pwm_test(), motor_test(), square_path();
+    motor_test();   // Test functions: motor_test(), square_path();
 
     while(1) {}     // Main while loop of the program
     

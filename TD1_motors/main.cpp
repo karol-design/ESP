@@ -10,8 +10,8 @@
 #include "mbed.h"   // Mbed library
 #include "C12832.h" // LCD screen library
 
-#define FORWARD 1   // Forward/backward direction pin logic value (for Motor class)
-#define BACKWARD 0
+#define FORWARD 0   // Forward/backward direction pin logic value (for Motor class)
+#define BACKWARD 1
 #define BIPOLAR 1   // Bipolar/unipolar mode pin logic value (for Motor class)
 #define UNIPOLAR 0
 
@@ -28,7 +28,7 @@
 #define PIN_ENCODER_R_CHA PC_10
 
 // Physical characteristic 
-#define WHEEL_RADIUS 1.59f          // Wheel radius (for velocity measurement) [m]
+#define WHEEL_RADIUS 0.04f          // Wheel radius (for velocity measurement) [m]
 
 // Velocity measurement config
 #define SAMPLING_FREQUENCY 2        // Velocity measurement sampling frequency [Hz]

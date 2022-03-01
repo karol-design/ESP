@@ -190,6 +190,8 @@ void motor_test() {
     }
 }
 
+
+/* ------------------------------- square_path function ------------------------------- */
 void square_path() {
     Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
     Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);

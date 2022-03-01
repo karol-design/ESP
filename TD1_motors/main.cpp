@@ -142,7 +142,7 @@ public:
     }
 
     void setSpeed(float speed) {    // Set speed (0.0 - 1.0)
-        speed = 1.0 - speed;        // Duty cycle reversed, i.e. 100% duty cycle disables the motor
+        speed = 1.0f - speed;        // Duty cycle reversed, i.e. 100% duty cycle disables the motor
         _motor.setDutyCycle(speed);
     }
 };
@@ -172,14 +172,16 @@ void motor_test() {
 
             wait(0.1);
             lcd.locate(74, 0); // Display only readings as they change
-            lcd.printf("%.2lf", wheelLeft.getVelocity());
+            lcd.printf("%5.2lf", wheelLeft.getVelocity());
             lcd.locate(74, 10);
-            lcd.printf("%.2lf", wheelRight.getVelocity());
+            lcd.printf("%5.2lf", wheelRight.getVelocity());
         }
 
         motorLeft.setDirection(FORWARD); // Spin the buggy
         motorRight.setDirection(BACKWARD);
     }
+    motorLeft.setSpeed(0.0);     // Set the speed for motor1
+    motorRight.setSpeed(0.0);     // Set the speed for motor2
 
     while(1) {  // Allow tests of encoders without running motors 
         wait(0.1);

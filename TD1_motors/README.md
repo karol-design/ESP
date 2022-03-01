@@ -7,8 +7,7 @@ This is the code to be used during the first technical demonstration. Presentati
 - [ ] Task 2 & 3 (Motors & Encoders): Drive both motors  (control the speed/direction of the motors - different speed for each) & Show an indicator of the turning wheels (LCD/LED) [additional time with no motor excitation for checking encoders by turning the wheels by hand]
 - [ ] Task 6 (Autonomous driving): The buggy should draw out a square, with sides of 0.5 m in length and then stop when it reaches the starting position. It should then turn around, and re-trace the square in the opposite direction.
 
-### Modes (functions) implemented in the code:
-1. **pwm_test** - Sweep linearly through different PWM values 
+### Modes (functions) implemented in the code
 2. **motor_test** - Change the speed of both motors & display the velocity readings on the LCD screen
 4. **square_path** - Drive on the virtual path in the shape of a square (0.5 m side), stop and re-trace the path in the opposite direction
 

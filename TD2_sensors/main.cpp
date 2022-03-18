@@ -27,7 +27,7 @@
 #define PIN_ENCODER_L_CHA PC_14
 #define PIN_ENCODER_R_CHA PC_10
 
-#define PIN_BT_TX PA_11
+#define PIN_BT_TX PA_11 //USART 6
 #define PIN_BT_RX PA_12
 
 // Physical characteristic 
@@ -177,12 +177,15 @@ public:
 /* ---------------------------- bluetooth_test function --------------------------- */
 void bluetooth_test() {
     DigitalOut LED(PA_5);   // Create a digital out object for an indicator LED
+    Serial pc(USBTX, USBRX);
     Bluetooth bt(PIN_BT_TX, PIN_BT_RX); // Initialise Bluetooth object
     bool status = false;    // LED status flag
+    pc.printf("Bluetooth test init...");
 
     if (bt.commandReceived()) { // If the command has been received toggle the LED
         status = !status;
         LED = status;
+            pc.printf("\nCommand received");
     }
 }
 

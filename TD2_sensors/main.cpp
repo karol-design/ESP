@@ -1,7 +1,7 @@
 /* Technical Demonstration 2 - Sensors
  * Description: STM32 firmware for reading and displaying sensor readings and BLE communication
  * Classes: Pwm, Encoder, Motor, Bluetooth
- * Functions: ...
+ * Functions: bluetooth_test
  * Last modification: 18/03/2022
  */
 
@@ -9,6 +9,7 @@
 /* ------------------------------- Pre-processor directives ------------------------------- */
 #include "mbed.h"   // Mbed library
 #include "C12832.h" // LCD screen library
+#include "SoftSerial.h" // Software serial port library
 
 #define FORWARD 0   // Forward/backward direction pin logic value (for Motor class)
 #define BACKWARD 1
@@ -26,6 +27,9 @@
 
 #define PIN_ENCODER_L_CHA PC_14
 #define PIN_ENCODER_R_CHA PC_10
+
+#define PIN_BT_TX PC_11
+#define PIN_BT_RX PC_12
 
 // Physical characteristic 
 #define WHEEL_RADIUS 0.04f          // Wheel radius (for velocity measurement) [m]
@@ -152,18 +156,41 @@ public:
 class Bluetooth {
 
 private:
-public:
+    SoftSerial hm10; // Set up software serial port for HM-10 BLE module
 
-    Bluetooth() : {
-        
+public:
+    Bluetooth(PinName tx, PinName rx) : hm10(tx, rx) {
+        hm10.baud(9600);    // Set the baud rate of hm-10 serial port to 9600
     }
 
+    bool commandReceived() {
+        bool received = false;    // Flag to indicate if there is anything in the buffer
+
+        while (hm10.readable()) {   // If the buffer isn't empty, flush it and set received flag
+            char c = hm10.getc();   // Flushing ensures that the same byte won't be read twice
+            received = true;
+        }
+        return received;
+    }
 };
+
+
+/* ---------------------------- bluetooth_test function --------------------------- */
+void bluetooth_test() {
+    DigitalOut LED(PA_5);   // Create a digital out object for an indicator LED
+    Bluetooth bt(PIN_BT_TX, PIN_BT_RX); // Initialise Bluetooth object
+    bool status = false;    // LED status flag
+
+    if (bt.commandReceived()) { // If the command has been received toggle the LED
+        status = !status;
+        LED = status;
+    }
+}
 
 /* ------------------------------- Main function ------------------------------- */
 int main() {
 
-    ...();   // Test functions: ...
+    bluetooth_test();   // Test functions: ...
     while(1) {}     // Main while loop of the program
     
 }

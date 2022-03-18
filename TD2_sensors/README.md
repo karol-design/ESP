@@ -7,7 +7,7 @@ This is the code to be used during the second technical demonstration. Presentat
 - [ ] Persent response of the MCU to a BLE command
 
 ### The following modes are implemented in the code:
-1. **Name** - ...
+1. **bluetooth_test** - Test receiving commands using BLE
 
 ### Classes implemented in the code:
 1. **Pwm** - Used to initialise and set duty cycle of a PWM channel

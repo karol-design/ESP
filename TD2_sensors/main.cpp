@@ -9,7 +9,6 @@
 /* ------------------------------- Pre-processor directives ------------------------------- */
 #include "mbed.h"   // Mbed library
 #include "C12832.h" // LCD screen library
-#include "SoftSerial.h" // Software serial port library
 
 #define FORWARD 0   // Forward/backward direction pin logic value (for Motor class)
 #define BACKWARD 1
@@ -28,8 +27,8 @@
 #define PIN_ENCODER_L_CHA PC_14
 #define PIN_ENCODER_R_CHA PC_10
 
-#define PIN_BT_TX PC_11
-#define PIN_BT_RX PC_12
+#define PIN_BT_TX PA_11
+#define PIN_BT_RX PA_12
 
 // Physical characteristic 
 #define WHEEL_RADIUS 0.04f          // Wheel radius (for velocity measurement) [m]
@@ -156,7 +155,7 @@ public:
 class Bluetooth {
 
 private:
-    SoftSerial hm10; // Set up software serial port for HM-10 BLE module
+    Serial hm10; // Set up software serial port for HM-10 BLE module
 
 public:
     Bluetooth(PinName tx, PinName rx) : hm10(tx, rx) {

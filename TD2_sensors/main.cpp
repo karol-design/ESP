@@ -182,10 +182,12 @@ void bluetooth_test() {
     bool status = false;    // LED status flag
     pc.printf("Bluetooth test init...");
 
-    if (bt.commandReceived()) { // If the command has been received toggle the LED
-        status = !status;
-        LED = status;
+    while(1) {
+        if (bt.commandReceived()) { // If the command has been received toggle the LED
             pc.printf("\nCommand received");
+            status = !status;
+            LED = status;
+        }
     }
 }
 

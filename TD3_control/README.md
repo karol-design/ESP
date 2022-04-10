@@ -8,7 +8,7 @@ buggy is held in the air and when friction is applied to the wheel? Does the spe
 - [ ] Follow a **straight section** of white line on a flat surface. Marks to be awarded for smoothness of trajectory, repeatability of control and on speed.
 - [ ] Follow a left-hand and right-hand **bend**. Marks to be awarded for smoothness and repeatability of control and on speed.
 - [ ] Return - detect the **turnaround point** and either reverse or perform 180⁰ turn, to return along the track. Marks are awarded for smoothness and speed.
-- [ ] Controlled stop - – Come to a controlled stop at the **end of line**. Marks are awarded for smoothness and repeatability of control.
+- [ ] Controlled stop - Come to a controlled stop at the **end of line**. Marks are awarded for smoothness and repeatability of control.
 
 
 ### The following modes are implemented in the code:

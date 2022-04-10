@@ -134,14 +134,14 @@ public:
     Motor(PinName mode, PinName dir, PinName pwm, int freq) : _mode_pin(mode), _direction_pin(dir), _motor(pwm, freq) {
         _setMode(UNIPOLAR);     // Set the mode to UNIPOLAR
         setDirection(FORWARD);  // Set direction to FORWARD 
-        setSpeed(0.0f);         // Stop the motor
+        setVoltage(0.0f);         // Stop the motor
     }
 
     void setDirection(int direction) {   // Set direction (FORWARD/BACKWARD)
         _direction_pin = direction;
     }
 
-    void setSpeed(float speed) {    // Set speed (0.0 - 1.0)
+    void setVoltage(float speed) {    // Set speed (0.0 - 1.0)
         speed = 1.0f - speed;        // Duty cycle reversed, i.e. 100% duty cycle disables the motor
         _motor.setDutyCycle(speed);
     }

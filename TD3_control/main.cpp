@@ -1,46 +1,44 @@
 /* Technical Demonstration 3 - Control
- * Description: STM32 firmware for ...
- * Classes: Pwm, Encoder, Motor, Propulsion, Sensors, TrackControl, Buggy, Bluetooth, Bluetooth
- * Functions: ...
- * Last modification: 10/04/2022
+ * Description: Final version of the firmware comprising all required components to fully control the buggy
+ * Classes: Pwm, Encoder, Motor, Propulsion, Sensors, TrackControl, Buggy, Bluetooth
+ * Last modification: 11/04/2022
  */
 
 
 /* ------------------------------- Pre-processor directives ------------------------------- */
 #include "mbed.h"   // Mbed library
-#include "C12832.h" // LCD screen library
 
 #define FORWARD 0   // Forward/backward direction pin logic value (for Motor class)
 #define BACKWARD 1
 
-// Definition of pins used for "STM32 - Subsystems" interface 
-#define PIN_MOTOR_L_PWM PB_15   // Pin connected to PWM1/3
+// Definition of STM32 pins used by external components
+#define PIN_BT_TX PA_11         // USART 6
+#define PIN_BT_RX PA_12
+
+#define PIN_MOTOR_L_PWM PB_15   // PWM1/3
 #define PIN_MOTOR_L_MODE PB_14
 #define PIN_MOTOR_L_DIR PB_13
 
-#define PIN_MOTOR_R_PWM PC_8    // Pin connected to PWM3/3
+#define PIN_MOTOR_R_PWM PC_8    // PWM3/3
 #define PIN_MOTOR_R_MODE PC_6
 #define PIN_MOTOR_R_DIR PC_5
 
 #define PIN_ENCODER_L_CHA PC_14
 #define PIN_ENCODER_R_CHA PC_10
 
-#define PIN_SENSOR_IN1 PB_15
-#define PIN_SENSOR_IN2 PB_15
-#define PIN_SENSOR_IN3 PB_15
-#define PIN_SENSOR_IN4 PB_15
-#define PIN_SENSOR_IN5 PB_15
-#define PIN_SENSOR_IN6 PB_15
-#define PIN_SENSOR_OUT1 PB_15
-#define PIN_SENSOR_OUT2 PB_15
-#define PIN_SENSOR_OUT3 PB_15
-#define PIN_SENSOR_OUT4 PB_15
-#define PIN_SENSOR_OUT5 PB_15
-#define PIN_SENSOR_OUT6 PB_15
+#define PIN_SENSOR_IN1 PA_0     // ADC
+#define PIN_SENSOR_IN2 PA_1     // ADC
+#define PIN_SENSOR_IN3 PA_4     // ADC
+#define PIN_SENSOR_IN4 PB_0     // ADC
+#define PIN_SENSOR_IN5 PC_1     // ADC
+#define PIN_SENSOR_IN6 PC_0     // ADC
 
-
-#define PIN_BT_TX PA_11 //USART 6
-#define PIN_BT_RX PA_12
+#define PIN_SENSOR_OUT1 PA_8
+#define PIN_SENSOR_OUT2 PB_10
+#define PIN_SENSOR_OUT3 PB_4
+#define PIN_SENSOR_OUT4 PB_5
+#define PIN_SENSOR_OUT5 PB_3
+#define PIN_SENSOR_OUT6 PA_10
 
 // Velocity measurement and control config
 #define SAMPLING_FREQUENCY 2        // Velocity measurement sampling frequency [Hz]
@@ -53,14 +51,10 @@
 #define SWITCHING_FREQUENCY 10000.0f    // Set PWM switching frequency to 10 kHz (100 us period) [Hz]
 
 // Track control config
-#define IR_MEASUREMENT_TIME 0.05f   // Time for which IR led is turned on for line sensing purposes [s]
 #define TRACK_DETECTED_THRESHOLD 0.2f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
 
 
-// LCD Disabled: C12832 lcd(D11, D13, D12, D7, D10); // LCD Initialisation (pin assignment)
-
-
-/* ------------------------------- Pwm class ------------------------------- */
+/* ------------------------------- Pwm class ----------------------------------- */
 class Pwm {
 
 private:
@@ -86,7 +80,7 @@ class Encoder {
 private:
     InterruptIn channelA;   // Interrupt channel to receive pulses from the encoder
     Ticker sampler;         // Ticker object to regularly sample current wheel velocity 
-    Timeout pulsesDt;       // Timeout object to measure delta t, when measureing pulses/s
+    Timeout pulsesDt;       // Timeout object to measure delta t, when measuring pulses/s
     int pulse_count;        // Pulses counter
     int _pulses_per_s;      // Pulses per second
     float _velocity;        // Wheel velocity in rev/s and normalised (0.0 - 1.0)
@@ -118,24 +112,24 @@ public:
         return velocity_norm;
     }
 
-    // Methods to start, stop and read raw counter value instead (for precise manouvers, e.g. turning 180 deg)
+    // Methods to start, stop and read raw counter value instead (for precise manoeuvres, e.g. turning 180 deg)
 
-    void startCounter(void) {  // Stop regular velocity measurements and start pulse counter
-        sampler.detach();   // Stop a ticker which regularly sample velocity
-        pulse_count = 0;    // Reset pulses counter
+    void startCounter(void) {   // Stop regular velocity measurements and start pulse counter
+        sampler.detach();       // Stop a ticker which regularly sample velocity
+        pulse_count = 0;        // Reset pulses counter
     }
 
     int getCounter(void) const {
-        return pulse_count; // Return pulse counter value
+        return pulse_count;     // Return pulse counter value
     }
 
-    void stopCounter(void) {   // Reinitialize regular velocity sampling
+    void stopCounter(void) {    // Reinitialize regular velocity sampling
         sampler.attach(callback(this, &Encoder::samplePulses), _sampling_period);   // Start a ticker to regularly sample velocity
     }
 };
 
 
-/* ------------------------------- Motor class ------------------------------- */
+/* ------------------------------- Motor class --------------------------------- */
 class Motor {
 
 private:
@@ -155,14 +149,15 @@ public:
         _direction_pin = direction;
     }
 
-    void setVoltage(float voltage) {    // Set voltage (0.0 - 1.0)
-        voltage = 1.0f - voltage;       // Duty cycle reversed, i.e. 100% duty cycle disables the motor
+    void setVoltage(float voltage) {        // Set voltage (0.0 - 1.0)
+        voltage = 0.4f + (voltage / 1.7f);  // 0.4 D.C. offset to get more linear dependency, e.g. .0 -> .4, .5 -> ~.7, 1.0 -> ~1.0 
+        voltage = 1.0f - voltage;           // Duty cycle reversed, i.e. 100% duty cycle disables the motor
         _motor.setDutyCycle(voltage);
     }
 };
 
 
-/* ------------------------------- Propulsion class ------------------------------- */
+/* ------------------------------- Propulsion class ---------------------------- */
 class Propulsion {
 
 private:
@@ -171,13 +166,13 @@ private:
     Encoder wheelLeft;
     Encoder wheelRight;
 
-    void setSpeed(float desired_speed, bool right) { // Set speed [0.0 - 1.0] for right / left motor
-        float measured_speed, speed = desired_speed;    // At the beginning the speed to be set is assumed to be equal to the desired_speed
-        float error = 0.0;  // At the beginning the error is assumed to be 0.0
+    void setSpeed(float desired_speed, bool right) {    // Set speed [0.0 - 1.0] for right / left motor
+        float measured_speed, speed = desired_speed;    // Start with the assumption that the speed to be set = desired_speed
+        float error = 0.0;                              // Assume that the error is 0.0
         do {
             // Higher Kp = quicker correction, less precision (higher steady-state error). Currently Kp = 0.5.
-            speed = speed + (0.5f * error);  // Speed based on last set speed and measured error
-            if (speed > 1.0f) {speed = 1.0f;} // Keep the speed in 0.0 - 1.0 limits
+            speed = speed + (0.5f * error);     // Speed based on last set speed and measured error
+            if (speed > 1.0f) {speed = 1.0f;}   // Keep the speed in 0.0 - 1.0 limits
             if (speed < 0.0f) {speed = 0.0f;}         
 
             if (right) {
@@ -205,7 +200,7 @@ public:
         motorRight.setDirection(FORWARD);
 
         motorLeft.setVoltage(0.0);     // Set the speed for motor1
-        motorRight.setVoltage(0.0);     // Set the speed for motor2
+        motorRight.setVoltage(0.0);    // Set the speed for motor2
     }
 
     void drive(float angle, float speed) {    // Speed [0.0 - 1.0] and angle [-1.0 - 1.0]
@@ -219,6 +214,10 @@ public:
         setSpeed(left_speed, 0);    // Set the speed of left motor
         setSpeed(right_speed, 1);   // Set the speed of right motor
     }
+
+    void turnaround() {
+        /* ... */
+    }
 };
 
 
@@ -231,7 +230,7 @@ private:
 
 public:
     Sensor(PinName output, PinName input) : phototransistor(output), ir_led(input) {
-        ir_led = 0; // Turn the IR LED off by default
+        ir_led = 0;     // Turn the IR LED off by default
     }
 
     float getAmbient() { // Return sensor reading [0.0 - 1.0], where 0.0 means no IR light detected
@@ -255,7 +254,7 @@ public:
 };
 
 
-/* ----------------------------- TrackControl class ----------------------------- */
+/* ------------------------------- TrackControl class -------------------------- */
 class TrackControl {
 
 private:
@@ -308,7 +307,7 @@ public:
 };
 
 
-/* ----------------------------- Buggy class ----------------------------- */
+/* ------------------------------- Buggy class --------------------------------- */
 class Buggy {
 
 private:
@@ -344,7 +343,7 @@ public:
 };
 
 
-/* ------------------------------- Bluetooth class ------------------------------- */
+/* ------------------------------- Bluetooth class ----------------------------- */
 class Bluetooth {
 
 private:

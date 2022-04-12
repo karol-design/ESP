@@ -3,7 +3,7 @@
 This is the code to be used during the third technical demonstration.
 
 ### Requirements (for the firmware) for TD3:
-- [ ] Demonstration of **speed control** using the encoders. Does the wheel speed stay constant when the
+- [ ] Demonstration of **speed control** using encoders. Does the wheel speed stay constant when the
 buggy is held in the air and when friction is applied to the wheel? Does the speed stay const. when the buggy goes up/down a slope?
 - [ ] Follow a **straight section** of white line on a flat surface. Marks to be awarded for smoothness of trajectory, repeatability of control and on speed.
 - [ ] Follow a left-hand and right-hand **bend**. Marks to be awarded for smoothness and repeatability of control and on speed.

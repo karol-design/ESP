@@ -496,12 +496,51 @@ void propulsionClassTest() {
     motors.turnaround();
 }
 
+
+void sensorClassTest() {
+    /* Use this test to:
+        --> Check if every sensor works fine and returns a reading between 0.0 and 1.0
+        --> Check ff the ambient reading is relatively small (e.g. <0.1)
+        --> Check if there is a clear difference in the reading above white and black lines
+        --> Check if detected() method works fine and is robust (always returns the correct value)
+    */
+
+    Serial pc(USBTX, NC);   // Creates an instance of a Serial Connection with default parameters
+    pc.printf("\nSensoorClassTest initialised\n");  // Print a message
+
+    Sensor U1(PIN_SENSOR_OUT1, PIN_SENSOR_IN1);
+    Sensor U2(PIN_SENSOR_OUT2, PIN_SENSOR_IN2);
+    Sensor U3(PIN_SENSOR_OUT3, PIN_SENSOR_IN3);
+    Sensor U4(PIN_SENSOR_OUT4, PIN_SENSOR_IN4);
+    Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
+    Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
+
+    for(int i=0; i<10; i++) { // Print 10 readings of the ambient IR light (every 1 s)
+        pc.printf("%4.2f | %4.2f | %4.2f | %4.2f | %4.2f | %4.2f",
+                  U1.getAmbient(), U2.getAmbient(), U3.getAmbient(), U4.getAmbient(), U5.getAmbient(), U6.getAmbient());
+        wait(1);
+    }
+
+
+    for(int i=0; i<10; i++) { // Print 10 readings of the reflected IR light (every 1 s)
+        pc.printf("%4.2f | %4.2f | %4.2f | %4.2f | %4.2f | %4.2f", U1.read(), U2.read(), U3.read(), U4.read(), U5.read(), U6.read());
+        wait(1);
+    }
+
+    for(int i=0; i<10; i++) { // Print 10 values of the detected/not-detected (every 1 s)
+        pc.printf("%d | %d | %d | %d | %d | %d",
+                  U1.detected(), U2.detected(), U3.detected(), U4.detected(), U5.detected(), U6.detected());
+        wait(1);
+    }
+}
+
 /* ------------------------------- Main function ------------------------------- */
 int main() {
 
     // motorClassTest();
     // encoderClassTest();
     // propulsionClassTest();
+    // sensorClassTest();
 
     while(1) {}
 }

@@ -4,7 +4,6 @@
  * Last modification: 12/04/2022
  */
 
-
 /* ------------------------------- Pre-processor directives ------------------------------- */
 #include "mbed.h"   // Mbed library
 
@@ -60,7 +59,6 @@
 #define ANGLE_CORRECTION_COEF 0.5f      // Proportional coefficient (controller) for angle correction [no units]
 #define DIRECTION_STABILISATION_DELAY 0.1f // Delay between setting the direction of the buggy and measuring the error [s]
 
-
 /* ------------------------------- Pwm class ----------------------------------- */
 class Pwm {
 
@@ -79,7 +77,6 @@ public:
         _pwm_pin.write(duty_cycle);  // Set the duty cycle (val between 0.0 - 1.0)
     }
 };
-
 
 /* ------------------------------- Encoder class ------------------------------- */
 class Encoder {
@@ -135,7 +132,6 @@ public:
     }
 };
 
-
 /* ------------------------------- Motor class --------------------------------- */
 class Motor {
 
@@ -162,7 +158,6 @@ public:
         _motor.setDutyCycle(voltage);
     }
 };
-
 
 /* ------------------------------- Propulsion class ---------------------------- */
 class Propulsion {
@@ -251,7 +246,6 @@ public:
     }
 };
 
-
 /* ------------------------------- Sensors class ------------------------------- */
 class Sensor {
 
@@ -283,7 +277,6 @@ public:
         return track_detected;
     }
 };
-
 
 /* ------------------------------- TrackControl class -------------------------- */
 class TrackControl {
@@ -321,7 +314,6 @@ public:
     }
 };
 
-
 /* ------------------------------- Buggy class --------------------------------- */
 class Buggy {
 
@@ -358,7 +350,6 @@ public:
     }
 };
 
-
 /* ------------------------------- Bluetooth class ----------------------------- */
 class Bluetooth {
 
@@ -380,7 +371,6 @@ public:
         return received;
     }
 };
-
 
 /* ------------------------------- Test functions ------------------------------ */
 void motorClassTest() {
@@ -405,7 +395,6 @@ void motorClassTest() {
     motorLeft.setVoltage(0.0);     // Test the speed for left and right motor 
     motorRight.setVoltage(1.0);
 }
-
 
 void encoderClassTest() {
     /* Use this test to:
@@ -463,7 +452,6 @@ void encoderClassTest() {
     }
 }
 
-
 void propulsionClassTest() {
     /* Use this test to:
         --> Check if you can control the velocity and the angle of movement for the buggy (test different angles and velocities)
@@ -483,7 +471,6 @@ void propulsionClassTest() {
     motors.drive(0.0, 0.0);
     motors.turnaround();
 }
-
 
 void sensorClassTest() {
     /* Use this test to:
@@ -521,7 +508,6 @@ void sensorClassTest() {
         wait(1);
     }
 }
-
 
 void trackControlClassTest() {
     /* Use this test to:

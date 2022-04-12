@@ -41,21 +41,24 @@
 #define PIN_SENSOR_OUT6 PA_10
 
 // Velocity measurement and control config
-#define SAMPLING_FREQUENCY 2        // Velocity measurement sampling frequency [Hz]
-#define PULSES_DELTA_T_US 400000    // Delta t for pulses/s measurement [us] 
-#define PULSES_PER_REV 256          // No. of quadrature encoder pulses per revolution [no units]
-#define MAX_VELOCITY 40.0f          // Max velocity of the wheel (40 rev/s ~ 27 km/h for r=3 cm) [rev/s] 
-#define SPEED_ERROR_COEF 0.5f       // Proportional coefficient (controller) for speed control [no units]
+#define SAMPLING_FREQUENCY 2            // Velocity measurement sampling frequency [Hz]
+#define PULSES_DELTA_T_US 400000        // Delta t for pulses/s measurement [us] 
+#define PULSES_PER_REV 256              // No. of quadrature encoder pulses per revolution [no units]
+#define MAX_VELOCITY 40.0f              // Max velocity of the wheel (40 rev/s ~ 27 km/h for r=3 cm) [rev/s] 
+#define SPEED_ERROR_COEF 0.5f           // Proportional coefficient (controller) for speed control [no units]
 #define SPEED_STABILISATION_DELAY 0.05f // Delay between setting and measuring the speed to see if it is equal to the desired speed [s]
-#define MAX_SPEED_ERROR 0.05f       // Max speed error [fraction of MAX_VELOCITY]
-#define TURNAROUND_PULSES 768       // Number of pulses for both motors to make turn the buggy by 180 degrees
+#define MAX_SPEED_ERROR 0.05f           // Max speed error [fraction of MAX_VELOCITY]
+#define TURNAROUND_PULSES 768           // Number of pulses for both motors to make turn the buggy by 180 degrees
 
 // Motors control config
 #define SWITCHING_FREQUENCY 10000.0f    // Set PWM switching frequency to 10 kHz (100 us period) [Hz]
 #define MOTOR_VOLTAGE_OFFSET 0.4f       // Offset, i.e. point at which the motor starts to rotate [fraction of the max supply voltage]
 
 // Track control config
+#define IR_MEASUREMENT_DELAY 0.05f      // Delay between turning IR LED on and measuring the reading from the phototransistor [s]
 #define TRACK_DETECTED_THRESHOLD 0.2f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
+#define ANGLE_CORRECTION_COEF 0.5f      // Proportional coefficient (controller) for angle correction [no units]
+#define DIRECTION_STABILISATION_DELAY 0.1f // Delay between setting the direction of the buggy and measuring the error [s]
 
 
 /* ------------------------------- Pwm class ----------------------------------- */
@@ -261,16 +264,16 @@ public:
         ir_led = 0;     // Turn the IR LED off by default
     }
 
-    float getAmbient() { // Return sensor reading [0.0 - 1.0], where 0.0 means no IR light detected
+    float getAmbient() {// Return sensor reading [0.0 - 1.0], where 0.0 means no IR light detected
         float value = 1.0f - phototransistor.read();
         return value;
     }
 
     float read() {      // Get normalised reading from the phototransistor [0.0 - 1.0]
         ir_led = 1;     // Turn the IR LED on
-        wait(0.005);    // Wait 5ms for the IR LED to turn fully on
+        wait(IR_MEASUREMENT_DELAY);         // Wait IR_MEASUREMENT_DELAY for the IR LED to turn fully on
         float reading = (1.0f - phototransistor.read());
-        wait(0.005);    // Wait 5ms before turning off the LED
+        wait(0.5f * IR_MEASUREMENT_DELAY);   // Wait 0.5 * IR_MEASUREMENT_DELAY before turning off the LED
         ir_led = 0;     // Turn the IR LED off
         return reading;
     }
@@ -288,21 +291,19 @@ class TrackControl {
 private:
     Sensor U1, U2, U3, U4, U5, U6;
 
-    float measureError() {
-        float error = 0.0;
-        
-        /* If U1 or U2 detect a white line:
-            Calculate what's the normalised error and return it
-           If not:
-            If U3, U4 U5 or U6 detect a white line
-                Approximate the normalised error accordingly and return it
-            If not:
-                Return -1
-        */
+public:
+    TrackControl() :
+        U1(PIN_SENSOR_OUT1, PIN_SENSOR_IN1), U2(PIN_SENSOR_OUT2, PIN_SENSOR_IN2),
+        U3(PIN_SENSOR_OUT3, PIN_SENSOR_IN3), U4(PIN_SENSOR_OUT4, PIN_SENSOR_IN4),
+        U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5), U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6) {}
 
-        if (U1.detected() || U2.detected()) {    // Check if U1 or U2 detect a white line
+    float getError() {
+        float error = 0.0;
+
+        if (U1.detected() || U2.detected()) {    // Check if U1 or U2 detect a white line and calc. the normalised error
             error = U1.read() - U2.read();
-        } else if (U3.detected() || U4.detected() || U5.detected() || U6.detected()) {   // Check if any sensor detected a white line
+        // Check if any other sensor detected a white line
+        } else if (U3.detected() || U4.detected() || U5.detected() || U6.detected()) {
             if(U3.detected()) { // Approximate the error accordingly
                 error = 0.5;
             } else if(U4.detected()) {
@@ -313,23 +314,9 @@ private:
                 error = -0.75;
             }
         } else {
-            error = -1.0; // Return -1 to indicata that the track has not been detected by any sensor
+            error = -1.0; // Return -1 to indicate that the track has not been detected by any sensor
         }
 
-        return error;
-    }
-
-public:
-    TrackControl() :
-        U1(PIN_SENSOR_OUT1, PIN_SENSOR_IN1),
-        U2(PIN_SENSOR_OUT2, PIN_SENSOR_IN2),
-        U3(PIN_SENSOR_OUT3, PIN_SENSOR_IN3),
-        U4(PIN_SENSOR_OUT4, PIN_SENSOR_IN4),
-        U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5),
-        U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6) {}
-
-    float getError() {
-        float error = measureError();
         return error;
     }
 };
@@ -354,10 +341,11 @@ public:
         float correction = sensors.getError();
 
         if (correction > -1.0) {   // Check if the line has been detected by any sensor
-            float angle = correction * 0.5f;
-            motors.drive(angle, 0.6);
-            wait(0.1);  // Drive with no change for 100 ms
             noTrack = false;    // Reset noTrack error flag
+
+            float angle = correction * ANGLE_CORRECTION_COEF;
+            motors.drive(angle, 0.6);
+            wait(DIRECTION_STABILISATION_DELAY);  // Drive with no change for DIRECTION_STABILISATION_DELAY s
         }
         
         return noTrack; // Return error (true) if the track has not been detected by any sensor
@@ -534,6 +522,23 @@ void sensorClassTest() {
     }
 }
 
+
+void trackControlClassTest() {
+    /* Use this test to:
+        --> Check if getError returns a correct error based on the position of the sensor board above the track
+    */
+
+    Serial pc(USBTX, NC);   // Creates an instance of a Serial Connection with default parameters
+    pc.printf("\nTrackControlClassTest initialised\n");  // Print a message
+
+    TrackControl sensors;
+
+    while(1) {
+        pc.printf("Error = %5.2f", sensors.getError()); // Print the current error
+        wait(0.5);
+    }
+}
+
 /* ------------------------------- Main function ------------------------------- */
 int main() {
 
@@ -541,6 +546,7 @@ int main() {
     // encoderClassTest();
     // propulsionClassTest();
     // sensorClassTest();
+    // trackControlClassTest();
 
     while(1) {}
 }

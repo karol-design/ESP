@@ -22,7 +22,7 @@
 #define PIN_MOTOR_R_MODE PC_6
 #define PIN_MOTOR_R_DIR PC_5
 
-#define PIN_ENCODER_L_CHA PC_14
+#define PIN_ENCODER_L_CHA PC_12
 #define PIN_ENCODER_R_CHA PC_10
 
 #define PIN_SENSOR_OUT1 PA_0     // ADC
@@ -43,7 +43,7 @@
 #define SAMPLING_FREQUENCY 2            // Velocity measurement sampling frequency [Hz]
 #define PULSES_DELTA_T_US 400000        // Delta t for pulses/s measurement [us] 
 #define PULSES_PER_REV 256              // No. of quadrature encoder pulses per revolution [no units]
-#define MAX_VELOCITY 40.0f              // Max velocity of the wheel (40 rev/s ~ 27 km/h for r=3 cm) [rev/s] 
+#define MAX_VELOCITY 12.0f              // Max velocity of the wheel [rev/s] 
 #define SPEED_ERROR_COEF 0.5f           // Proportional coefficient (controller) for speed control [no units]
 #define SPEED_STABILISATION_DELAY 0.05f // Delay between setting and measuring the speed to see if it is equal to the desired speed [s]
 #define MAX_SPEED_ERROR 0.05f           // Max speed error [fraction of MAX_VELOCITY]
@@ -51,7 +51,7 @@
 
 // Motors control config
 #define SWITCHING_FREQUENCY 10000.0f    // Set PWM switching frequency to 10 kHz (100 us period) [Hz]
-#define MOTOR_VOLTAGE_OFFSET 0.4f       // Offset, i.e. point at which the motor starts to rotate [fraction of the max supply voltage]
+#define MOTOR_VOLTAGE_OFFSET 0.0f       // Offset, i.e. point at which the motor starts to rotate [fraction of the max supply voltage]
 
 // Track control config
 #define IR_MEASUREMENT_DELAY 0.01f      // Delay between turning IR LED on and measuring the reading from the phototransistor [s]
@@ -479,7 +479,7 @@ void propulsionClassTest() {
 void sensorClassTest() {
     /* Use this test to:
         --> Check if every sensor works fine and returns a reading between 0.0 and 1.0
-        --> Check ff the ambient reading is relatively small (e.g. <0.1)
+        --> Check if the ambient reading is relatively small (e.g. <0.1)
         --> Check if there is a clear difference in the reading above white and black lines
         --> Check if detected() method works fine and is robust (always returns the correct value)
     */

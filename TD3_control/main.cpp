@@ -55,7 +55,7 @@
 
 // Track control config
 #define IR_MEASUREMENT_DELAY 0.01f      // Delay between turning IR LED on and measuring the reading from the phototransistor [s]
-#define TRACK_DETECTED_THRESHOLD 0.5f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
+#define TRACK_DETECTED_THRESHOLD 0.2f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
 #define ANGLE_CORRECTION_COEF 0.5f      // Proportional coefficient (controller) for angle correction [no units]
 #define DIRECTION_STABILISATION_DELAY 0.1f // Delay between setting the direction of the buggy and measuring the error [s]
 

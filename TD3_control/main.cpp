@@ -40,14 +40,14 @@
 #define PIN_SENSOR_IN6 PA_5
 
 // Velocity measurement and control config
-#define SAMPLING_FREQUENCY 2            // Velocity measurement sampling frequency [Hz]
-#define PULSES_DELTA_T_US 400000        // Delta t for pulses/s measurement [us] 
+#define SAMPLING_FREQUENCY 30            // Velocity measurement sampling frequency [Hz]
+#define PULSES_DELTA_T_US 20000         // Delta t for pulses/s measurement [us] 
 #define PULSES_PER_REV 256              // No. of quadrature encoder pulses per revolution [no units]
-#define MAX_VELOCITY 12.0f              // Max velocity of the wheel [rev/s] 
-#define SPEED_ERROR_COEF 0.5f           // Proportional coefficient (controller) for speed control [no units]
-#define SPEED_STABILISATION_DELAY 0.05f // Delay between setting and measuring the speed to see if it is equal to the desired speed [s]
-#define MAX_SPEED_ERROR 0.05f           // Max speed error [fraction of MAX_VELOCITY]
-#define TURNAROUND_PULSES 768           // Number of pulses for both motors to make turn the buggy by 180 degrees
+#define MAX_VELOCITY 10.0f              // Max velocity of the wheel (40 rev/s ~ 27 km/h for r=3 cm) [rev/s] 
+#define SPEED_ERROR_COEF 0.4f           // Proportional coefficient (controller) for speed control [no units]
+#define SPEED_STABILISATION_DELAY 0.02f // Delay between setting and measuring the speed to see if it is equal to the desired speed [s]
+#define MAX_SPEED_ERROR 0.04f           // Max speed error [fraction of MAX_VELOCITY]
+#define TURNAROUND_PULSES 320           // Number of pulses for both motors to make turn the buggy by 180 degrees
 
 // Motors control config
 #define SWITCHING_FREQUENCY 10000.0f    // Set PWM switching frequency to 10 kHz (100 us period) [Hz]
@@ -58,6 +58,8 @@
 #define TRACK_DETECTED_THRESHOLD 0.2f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
 #define ANGLE_CORRECTION_COEF 0.5f      // Proportional coefficient (controller) for angle correction [no units]
 #define DIRECTION_STABILISATION_DELAY 0.1f // Delay between setting the direction of the buggy and measuring the error [s]
+
+Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
 
 /* ------------------------------- Pwm class ----------------------------------- */
 class Pwm {
@@ -168,27 +170,46 @@ private:
     Encoder wheelLeft;
     Encoder wheelRight;
 
-    void setSpeed(float desired_speed, bool right) {    // Set speed [0.0 - 1.0] for right / left motor
-        float measured_speed, speed = desired_speed;    // Start with the assumption that the speed to be set = desired_speed
-        float error = 0.0;                              // Assume that the error is 0.0
-        do {
-            // Higher Kp (SPEED_ERROR_COEF) = quicker correction, less precision (higher steady-state error).
+    void setSpeedRight(float desired_speed) {    // Set speed [0.0 - 1.0] for right / left motor
+        static float speed = desired_speed;
+        float measured_speed = desired_speed;    // Start with the assumption that the speed to be set = desired_speed
+        float error = 0.0;                       // Assume that the error is 0.0
+        
+        error = desired_speed - wheelRight.getVelocity(); // Calculate current error
+        
+        while (error > MAX_SPEED_ERROR || error < -MAX_SPEED_ERROR) { // Adjust the speed only if the errr is to large
             speed = speed + (SPEED_ERROR_COEF * error); // Speed based on last set speed and measured error
             if (speed > 1.0f) {speed = 1.0f;}           // Keep the speed in 0.0 - 1.0 limits
             if (speed < 0.0f) {speed = 0.0f;}
-
-            if (right) {
-                motorRight.setVoltage(speed);
-                wait(SPEED_STABILISATION_DELAY); // Wait for some time to ensure the speed stabilises at the new value
-                measured_speed = wheelRight.getVelocity(); 
-            } else {
-                motorLeft.setVoltage(speed);
-                wait(SPEED_STABILISATION_DELAY);
-                measured_speed = wheelLeft.getVelocity(); 
-            }
-                   
+            
+            motorRight.setVoltage(speed);
+            wait(SPEED_STABILISATION_DELAY); // Wait for some time to ensure the speed stabilises at the new value
+            
+            measured_speed = wheelRight.getVelocity();
             error = desired_speed - measured_speed; // Calculate current error
-        } while (error > MAX_SPEED_ERROR);  // Continue only if the error above the required limit
+            pc.printf("\nR Speed adjust.: %.2f - %.2f = %.2f --> %.2f", desired_speed, measured_speed, error, speed);  // Print a message
+        }
+    }
+    
+    void setSpeedLeft(float desired_speed) {    // Set speed [0.0 - 1.0] for right / left motor
+        static float speed = desired_speed;
+        float measured_speed = desired_speed;    // Start with the assumption that the speed to be set = desired_speed
+        float error = 0.0;                       // Assume that the error is 0.0
+        
+        error = desired_speed - wheelLeft.getVelocity(); // Calculate current error
+        
+        while (error > MAX_SPEED_ERROR || error < -MAX_SPEED_ERROR) { // Adjust the speed only if the errr is to large
+            speed = speed + (SPEED_ERROR_COEF * error); // Speed based on last set speed and measured error
+            if (speed > 1.0f) {speed = 1.0f;}           // Keep the speed in 0.0 - 1.0 limits
+            if (speed < 0.0f) {speed = 0.0f;}
+            
+            motorLeft.setVoltage(speed);
+            wait(SPEED_STABILISATION_DELAY); // Wait for some time to ensure the speed stabilises at the new value
+            
+            measured_speed = wheelLeft.getVelocity();
+            error = desired_speed - measured_speed; // Calculate current error
+            pc.printf("\nL Speed adjust.: %.2f - %.2f = %.2f --> %.2f", desired_speed, measured_speed, error, speed);  // Print a message
+        }
     }
 
 public:
@@ -205,16 +226,17 @@ public:
         motorRight.setVoltage(0.0);    // Set the speed for motor2
     }
 
-    void drive(float angle, float speed) {    // Speed [0.0 - 1.0] and angle [-1.0 - 1.0]
-        float left_speed = ((angle - 1.0f) / -2.0f) * speed;
-        float right_speed = ((angle + 1.0f) / 2.0f) * speed;
-        /*  Angle       -1.0    -0.5    0.0     +0.5    +1.0
-            Left Motor  1.00    0.75    0.50    0.25    0.00
-            Right Motor 0.00    0.25    0.50    0.75    1.00
-        */
-
-        setSpeed(left_speed, 0);    // Set the speed of left motor
-        setSpeed(right_speed, 1);   // Set the speed of right motor
+    void drive(float left_speed, float right_speed) {
+        static bool speed_set_for_the_first_time = true;
+        if(speed_set_for_the_first_time) {
+            motorLeft.setVoltage(left_speed);
+            motorRight.setVoltage(right_speed);
+            pc.printf("\nSet default speed");  // Print a message
+            speed_set_for_the_first_time = false;
+        }
+        
+        setSpeedRight(left_speed);   // Set the speed of right motor
+        setSpeedLeft(right_speed);   // Set the speed of right motor
     }
 
     void turnaround() {
@@ -226,14 +248,14 @@ public:
 
         while(left_finished == false || right_finished == false) {
             if(wheelLeft.getCounter() < TURNAROUND_PULSES) {
-                motorLeft.setVoltage(0.3);    // Set the speed of 30% for the left motor
+                motorLeft.setVoltage(0.2);    // Set the speed of 30% for the left motor
             } else {
                 motorLeft.setVoltage(0.0);    // Turn off the left motor
                 left_finished = true;
             }
 
             if(wheelRight.getCounter() < TURNAROUND_PULSES) {
-                motorRight.setVoltage(0.3);    // Set the speed of 30% for the right motor
+                motorRight.setVoltage(0.2);    // Set the speed of 30% for the right motor
             } else {
                 motorRight.setVoltage(0.0);    // Turn off the right motor
                 right_finished = true;
@@ -393,11 +415,11 @@ void motorClassTest() {
     Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
     Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
     
-    motorLeft.setDirection(FORWARD);   // Test motors for FORWARD and BACKWARD directions
-    motorRight.setDirection(BACKWARD);
+    motorLeft.setDirection(BACKWARD);   // Test motors for FORWARD and BACKWARD directions
+    motorRight.setDirection(FORWARD);
 
-    motorLeft.setVoltage(0.0);     // Test the speed for left and right motor 
-    motorRight.setVoltage(1.0);
+    motorLeft.setVoltage(1.0);     // Test the speed for left and right motor 
+    motorRight.setVoltage(0.2);
 }
 
 void encoderClassTest() {
@@ -465,12 +487,11 @@ void propulsionClassTest() {
         --> Check if the turnaround() makes the buggy turn by exactly 180 degrees
     */
 
-    Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
-    pc.printf("\nPropulsionClassTest initialised\n");  // Print a message
-
     Propulsion motors;
-
-    motors.drive(0.0, 1.0); // drive(angle, velocity), angle = -1.0 - 1.0 (only right motor) and velocity = 0.0 - 1.0 (MAX_VELOCITY)
+    wait(1); // Wait for 1 s before the test
+    while(1){
+        motors.drive(0.2, 0.2); // drive(angle, velocity), angle = -1.0 - 1.0 (only right motor) and velocity = 0.0 - 1.0 (MAX_VELOCITY)
+    }
     wait(10); // Test driving for 10 seconds and test turnaround
     motors.drive(0.0, 0.0);
     motors.turnaround();
@@ -479,7 +500,7 @@ void propulsionClassTest() {
 void sensorClassTest() {
     /* Use this test to:
         --> Check if every sensor works fine and returns a reading between 0.0 and 1.0
-        --> Check if the ambient reading is relatively small (e.g. <0.1)
+        --> Check ff the ambient reading is relatively small (e.g. <0.1)
         --> Check if there is a clear difference in the reading above white and black lines
         --> Check if detected() method works fine and is robust (always returns the correct value)
     */
@@ -536,7 +557,7 @@ int main() {
 
     // motorClassTest();
     // encoderClassTest();
-    // propulsionClassTest();
+     propulsionClassTest();
     // sensorClassTest();
     // trackControlClassTest();
 
@@ -544,16 +565,13 @@ int main() {
 }
 
 /* Code for int main() to be used during TD3:
-
     Buggy buggy;
     int no_track_errors = 0;
     bool task_finished = false;
     bool turnaround_finished = false;
-
     while(task_finished = false) { 
         noTrack = buggy.followTrack();  // Follow the line
         if(noTrack = true) {no_track_errors++}
-
         if(no_track_errors = 1 && turnaround_finished = false) {           // End of the track - turnaround point
             buggy.turnaround();             // Make a U-turn
             turnaround_finished = true;
@@ -562,5 +580,4 @@ int main() {
             task_finished = true;
         }
     }
-
 */

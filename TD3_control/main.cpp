@@ -387,7 +387,7 @@ void motorClassTest() {
         --> Check if both motors doesn't rotate when "setVoltage(0.0)"
     */
 
-    Serial pc(USBTX, NC);   // Creates an instance of a Serial Connection with default parameters
+    Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
     pc.printf("\nMotorClassTest initialised\n");  // Print a message
 
     Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
@@ -409,7 +409,7 @@ void encoderClassTest() {
         --> Check if after 10 seconds you can again see the velocity of both wheels
     */
 
-    Serial pc(USBTX, NC);   // Creates an instance of a Serial Connection with default parameters
+    Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
     pc.printf("\nEncoderClassTest initialised\n");  // Print a message
 
     Encoder wheelLeft(PIN_ENCODER_L_CHA, SAMPLING_FREQUENCY);
@@ -465,7 +465,7 @@ void propulsionClassTest() {
         --> Check if the turnaround() makes the buggy turn by exactly 180 degrees
     */
 
-    Serial pc(USBTX, NC);   // Creates an instance of a Serial Connection with default parameters
+    Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
     pc.printf("\nPropulsionClassTest initialised\n");  // Print a message
 
     Propulsion motors;
@@ -484,7 +484,7 @@ void sensorClassTest() {
         --> Check if detected() method works fine and is robust (always returns the correct value)
     */
 
-    Serial pc(USBTX, NC);   // Creates an instance of a Serial Connection with default parameters
+    Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
     pc.printf("\nSensoorClassTest initialised\n");  // Print a message
 
     Sensor U1(PIN_SENSOR_OUT1, PIN_SENSOR_IN1);
@@ -518,7 +518,7 @@ void trackControlClassTest() {
         --> Check if getError returns a correct error based on the position of the sensor board above the track
     */
 
-    Serial pc(USBTX, NC);   // Creates an instance of a Serial Connection with default parameters
+    Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
     pc.printf("\nTrackControlClassTest initialised\n");  // Print a message
 
     TrackControl sensors;
@@ -531,9 +531,6 @@ void trackControlClassTest() {
 
 /* ------------------------------- Main function ------------------------------- */
 int main() {
-
-    Serial pc(USBTX, NC);   // Creates an instance of a Serial Connection with default parameters
-    pc.printf("\nSerial line test initialised\n");  // Print a message
 
     // motorClassTest();
     // encoderClassTest();

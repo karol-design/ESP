@@ -494,20 +494,22 @@ void sensorClassTest() {
     Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
     Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
 
+    pc.printf("\n\nAmbient readings:\n");  // Print a message
     for(int i=0; i<10; i++) { // Print 10 readings of the ambient IR light (every 1 s)
-        pc.printf("%4.2f | %4.2f | %4.2f | %4.2f | %4.2f | %4.2f",
+        pc.printf("\n%4.2f | %4.2f | %4.2f | %4.2f | %4.2f | %4.2f",
                   U1.getAmbient(), U2.getAmbient(), U3.getAmbient(), U4.getAmbient(), U5.getAmbient(), U6.getAmbient());
         wait(1);
     }
 
-
+    pc.printf("\n\IR readings:\n");  // Print a message
     for(int i=0; i<10; i++) { // Print 10 readings of the reflected IR light (every 1 s)
-        pc.printf("%4.2f | %4.2f | %4.2f | %4.2f | %4.2f | %4.2f", U1.read(), U2.read(), U3.read(), U4.read(), U5.read(), U6.read());
+        pc.printf("\n%4.2f | %4.2f | %4.2f | %4.2f | %4.2f | %4.2f", U1.read(), U2.read(), U3.read(), U4.read(), U5.read(), U6.read());
         wait(1);
     }
 
+    pc.printf("\n\n Detected:\n");  // Print a message
     for(int i=0; i<10; i++) { // Print 10 values of the detected/not-detected (every 1 s)
-        pc.printf("%d | %d | %d | %d | %d | %d",
+        pc.printf("\n%d | %d | %d | %d | %d | %d",
                   U1.detected(), U2.detected(), U3.detected(), U4.detected(), U5.detected(), U6.detected());
         wait(1);
     }

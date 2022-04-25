@@ -25,19 +25,19 @@
 #define PIN_ENCODER_L_CHA PC_14
 #define PIN_ENCODER_R_CHA PC_10
 
-#define PIN_SENSOR_IN1 PA_0     // ADC
-#define PIN_SENSOR_IN2 PA_1     // ADC
-#define PIN_SENSOR_IN3 PA_4     // ADC
-#define PIN_SENSOR_IN4 PB_0     // ADC
-#define PIN_SENSOR_IN5 PC_1     // ADC
-#define PIN_SENSOR_IN6 PC_0     // ADC
+#define PIN_SENSOR_OUT1 PA_0     // ADC
+#define PIN_SENSOR_OUT2 PA_1     // ADC
+#define PIN_SENSOR_OUT3 PA_4     // ADC
+#define PIN_SENSOR_OUT4 PB_0     // ADC
+#define PIN_SENSOR_OUT5 PC_1     // ADC
+#define PIN_SENSOR_OUT6 PC_0     // ADC
 
-#define PIN_SENSOR_OUT1 PA_8
-#define PIN_SENSOR_OUT2 PB_10
-#define PIN_SENSOR_OUT3 PB_4
-#define PIN_SENSOR_OUT4 PB_5
-#define PIN_SENSOR_OUT5 PB_3
-#define PIN_SENSOR_OUT6 PA_10
+#define PIN_SENSOR_IN1 PB_6
+#define PIN_SENSOR_IN2 PA_7
+#define PIN_SENSOR_IN3 PC_7
+#define PIN_SENSOR_IN4 PA_6
+#define PIN_SENSOR_IN5 PA_9
+#define PIN_SENSOR_IN6 PA_5
 
 // Velocity measurement and control config
 #define SAMPLING_FREQUENCY 2            // Velocity measurement sampling frequency [Hz]

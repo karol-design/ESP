@@ -54,8 +54,8 @@
 #define MOTOR_VOLTAGE_OFFSET 0.4f       // Offset, i.e. point at which the motor starts to rotate [fraction of the max supply voltage]
 
 // Track control config
-#define IR_MEASUREMENT_DELAY 0.05f      // Delay between turning IR LED on and measuring the reading from the phototransistor [s]
-#define TRACK_DETECTED_THRESHOLD 0.2f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
+#define IR_MEASUREMENT_DELAY 0.01f      // Delay between turning IR LED on and measuring the reading from the phototransistor [s]
+#define TRACK_DETECTED_THRESHOLD 0.5f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
 #define ANGLE_CORRECTION_COEF 0.5f      // Proportional coefficient (controller) for angle correction [no units]
 #define DIRECTION_STABILISATION_DELAY 0.1f // Delay between setting the direction of the buggy and measuring the error [s]
 
@@ -501,7 +501,7 @@ void sensorClassTest() {
         wait(1);
     }
 
-    pc.printf("\n\IR readings:\n");  // Print a message
+    pc.printf("\n\nIR readings:\n");  // Print a message
     for(int i=0; i<10; i++) { // Print 10 readings of the reflected IR light (every 1 s)
         pc.printf("\n%4.2f | %4.2f | %4.2f | %4.2f | %4.2f | %4.2f", U1.read(), U2.read(), U3.read(), U4.read(), U5.read(), U6.read());
         wait(1);

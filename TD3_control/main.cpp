@@ -532,6 +532,9 @@ void trackControlClassTest() {
 /* ------------------------------- Main function ------------------------------- */
 int main() {
 
+    Serial pc(USBTX, NC);   // Creates an instance of a Serial Connection with default parameters
+    pc.printf("\nSerial line test initialised\n");  // Print a message
+
     // motorClassTest();
     // encoderClassTest();
     // propulsionClassTest();

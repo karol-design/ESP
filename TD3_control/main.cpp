@@ -465,15 +465,36 @@ void sensorClassTest() {
     }
 }
 
-void trackControlClassTest() {
-    /* Use this test to:
-        --> Check if getError returns a correct error based on the position of the sensor board above the track
-    */
+void followTrackTest() {
+    Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
+    Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
 
-    Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
-    pc.printf("\nTrackControlClassTest initialised\n");  // Print a message
+    motorLeft.setDirection(FORWARD);   // Test motors for FORWARD and BACKWARD directions
+    motorRight.setDirection(FORWARD);
 
-    TrackControl sensors;
+    motorLeft.setVoltage(0.0);     // Set the speed for motor1
+    motorRight.setVoltage(0.0);    // Set the speed for motor2
+    wait(1);
+    Sensor U1(PIN_SENSOR_OUT1, PIN_SENSOR_IN1);
+    Sensor U2(PIN_SENSOR_OUT2, PIN_SENSOR_IN2);
+    Sensor U3(PIN_SENSOR_OUT3, PIN_SENSOR_IN3);
+    Sensor U4(PIN_SENSOR_OUT4, PIN_SENSOR_IN4);
+    Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
+    Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
+    
+    while(1) {
+        while(U1.detected() == false){
+            motorLeft.setVoltage(0.50);
+            motorRight.setVoltage(0.60);
+        }
+        wait(0.02);
+        while(U2.detected() == false){
+            motorLeft.setVoltage(0.60);
+            motorRight.setVoltage(0.50);    
+        }
+        wait(0.02);
+    }
+}
 
     while(1) {
         pc.printf("Error = %5.2f", sensors.getError()); // Print the current error
@@ -489,6 +510,7 @@ int main() {
      propulsionClassTest();
     // sensorClassTest();
     // trackControlClassTest();
+    
+    // followTrackTest();
 
     while(1) {}
-}

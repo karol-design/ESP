@@ -496,9 +496,23 @@ void followTrackTest() {
     }
 }
 
+void followTrackPropulsion(){
+    Propulsion motors;
+    wait(1);
+    Sensor U1(PIN_SENSOR_OUT1, PIN_SENSOR_IN1);
+    Sensor U2(PIN_SENSOR_OUT2, PIN_SENSOR_IN2);
+    Sensor U3(PIN_SENSOR_OUT3, PIN_SENSOR_IN3);
+    Sensor U4(PIN_SENSOR_OUT4, PIN_SENSOR_IN4);
+    Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
+    Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
+    
     while(1) {
-        pc.printf("Error = %5.2f", sensors.getError()); // Print the current error
-        wait(0.5);
+        while(U1.detected() == false){
+            motors.drive(0.07, 0.12); // Slowly drive left to look for the track
+        }
+        while(U2.detected() == false){
+            motors.drive(0.12, 0.07); // Slowly drive right to look for the track    
+        }
     }
 }
 
@@ -507,10 +521,12 @@ int main() {
 
     // motorClassTest();
     // encoderClassTest();
-     propulsionClassTest();
+    // propulsionClassTest();
     // sensorClassTest();
     // trackControlClassTest();
     
     // followTrackTest();
+    // followTrackPropulsion();
 
     while(1) {}
+}

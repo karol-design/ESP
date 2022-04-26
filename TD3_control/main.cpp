@@ -304,7 +304,6 @@ public:
     }
 };
 
-
 /* ------------------------------- Bluetooth class ----------------------------- */
 class Bluetooth {
 
@@ -524,7 +523,6 @@ int main() {
     // propulsionClassTest();
     // sensorClassTest();
     // trackControlClassTest();
-    
     // followTrackTest();
     // followTrackPropulsion();
 

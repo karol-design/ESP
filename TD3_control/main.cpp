@@ -40,13 +40,13 @@
 #define PIN_SENSOR_IN6 PA_5
 
 // Velocity measurement and control config
-#define SAMPLING_FREQUENCY 30            // Velocity measurement sampling frequency [Hz]
+#define SAMPLING_FREQUENCY 45           // Velocity measurement sampling frequency [Hz]
 #define PULSES_DELTA_T_US 20000         // Delta t for pulses/s measurement [us] 
 #define PULSES_PER_REV 256              // No. of quadrature encoder pulses per revolution [no units]
 #define MAX_VELOCITY 10.0f              // Max velocity of the wheel (40 rev/s ~ 27 km/h for r=3 cm) [rev/s] 
-#define SPEED_ERROR_COEF 0.4f           // Proportional coefficient (controller) for speed control [no units]
-#define SPEED_STABILISATION_DELAY 0.02f // Delay between setting and measuring the speed to see if it is equal to the desired speed [s]
-#define MAX_SPEED_ERROR 0.04f           // Max speed error [fraction of MAX_VELOCITY]
+#define SPEED_ERROR_COEF 0.7f           // Proportional coefficient (controller) for speed control [no units]
+#define SPEED_STABILISATION_DELAY 0.025f // Delay between setting and measuring the speed to see if it is equal to the desired speed [s]
+#define MAX_SPEED_ERROR 0.06f           // Max speed error [fraction of MAX_VELOCITY]
 #define TURNAROUND_PULSES 320           // Number of pulses for both motors to make turn the buggy by 180 degrees
 
 // Motors control config

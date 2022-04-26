@@ -174,10 +174,11 @@ private:
         static float speed = desired_speed;
         float measured_speed = desired_speed;    // Start with the assumption that the speed to be set = desired_speed
         float error = 0.0;                       // Assume that the error is 0.0
+        int counter = 0;
         
         error = desired_speed - wheelRight.getVelocity(); // Calculate current error
         
-        while (error > MAX_SPEED_ERROR || error < -MAX_SPEED_ERROR) { // Adjust the speed only if the errr is to large
+        while ((error > MAX_SPEED_ERROR || error < -MAX_SPEED_ERROR) && counter < 3) { // Adjust the speed only if the errr is to large
             speed = speed + (SPEED_ERROR_COEF * error); // Speed based on last set speed and measured error
             if (speed > 1.0f) {speed = 1.0f;}           // Keep the speed in 0.0 - 1.0 limits
             if (speed < 0.0f) {speed = 0.0f;}
@@ -188,6 +189,7 @@ private:
             measured_speed = wheelRight.getVelocity();
             error = desired_speed - measured_speed; // Calculate current error
             pc.printf("\nR Speed adjust.: %.2f - %.2f = %.2f --> %.2f", desired_speed, measured_speed, error, speed);  // Print a message
+            counter++;
         }
     }
     
@@ -195,10 +197,11 @@ private:
         static float speed = desired_speed;
         float measured_speed = desired_speed;    // Start with the assumption that the speed to be set = desired_speed
         float error = 0.0;                       // Assume that the error is 0.0
+        int counter = 0;
         
         error = desired_speed - wheelLeft.getVelocity(); // Calculate current error
         
-        while (error > MAX_SPEED_ERROR || error < -MAX_SPEED_ERROR) { // Adjust the speed only if the errr is to large
+        while ((error > MAX_SPEED_ERROR || error < -MAX_SPEED_ERROR) && counter < 3) { // Adjust the speed only if the errr is to large
             speed = speed + (SPEED_ERROR_COEF * error); // Speed based on last set speed and measured error
             if (speed > 1.0f) {speed = 1.0f;}           // Keep the speed in 0.0 - 1.0 limits
             if (speed < 0.0f) {speed = 0.0f;}
@@ -209,6 +212,7 @@ private:
             measured_speed = wheelLeft.getVelocity();
             error = desired_speed - measured_speed; // Calculate current error
             pc.printf("\nL Speed adjust.: %.2f - %.2f = %.2f --> %.2f", desired_speed, measured_speed, error, speed);  // Print a message
+            counter++;
         }
     }
 

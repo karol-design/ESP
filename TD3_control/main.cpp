@@ -563,21 +563,3 @@ int main() {
 
     while(1) {}
 }
-
-/* Code for int main() to be used during TD3:
-    Buggy buggy;
-    int no_track_errors = 0;
-    bool task_finished = false;
-    bool turnaround_finished = false;
-    while(task_finished = false) { 
-        noTrack = buggy.followTrack();  // Follow the line
-        if(noTrack = true) {no_track_errors++}
-        if(no_track_errors = 1 && turnaround_finished = false) {           // End of the track - turnaround point
-            buggy.turnaround();             // Make a U-turn
-            turnaround_finished = true;
-        } else if(no_track_errors = 2) {    // End of the track - stop
-            buggy.drive(0.0, 0.0)           // Stop the buggy
-            task_finished = true;
-        }
-    }
-*/

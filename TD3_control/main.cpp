@@ -326,205 +326,33 @@ public:
     }
 };
 
-/* ------------------------------- Test functions ------------------------------ */
-void motorClassTest() {
-    /* Use this test to:
-        --> Check if you can control the direction of rotation for both motors
-            and if the direction is correct, i.e. FORWARD will actually move the buggy forward
-        --> Check if you can control the voltage for both motors
-        --> Check if the relationship between the voltage and the velocity is approximately linear,
-            e.g. when you apply 0.2 the motor starts to rotate at ~20% of max velocity
-        --> Check if both motors doesn't rotate when "setVoltage(0.0)"
-    */
-
-    Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
-    pc.printf("\nMotorClassTest initialised\n");  // Print a message
-
-    Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
-    Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
-    
-    motorLeft.setDirection(BACKWARD);   // Test motors for FORWARD and BACKWARD directions
-    motorRight.setDirection(FORWARD);
-
-    motorLeft.setVoltage(1.0);     // Test the speed for left and right motor 
-    motorRight.setVoltage(0.2);
-}
-
-void encoderClassTest() {
-    /* Use this test to:
-        --> Check if you can see the velocity (fraction of MAX_VELOCITY) of the left and right wheel and if the values make sense
-        --> Check if after 10 seconds you can see the value of the individual impulses counters for both wheels
-        --> Check if one rotation of the wheel is equal to 256 pulses
-        --> Measure what's the maximum speed in pulses/s and then in rev/s
-        --> Check if after 10 seconds you can again see the velocity of both wheels
-    */
-
-    Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
-    pc.printf("\nEncoderClassTest initialised\n");  // Print a message
-
-    Encoder wheelLeft(PIN_ENCODER_L_CHA, SAMPLING_FREQUENCY);
-    Encoder wheelRight(PIN_ENCODER_R_CHA, SAMPLING_FREQUENCY);
-    
-    // Velocity measurement test
-
-    for(int i=0; i<100; i++) { // Get 100 velocity readings (every 0.1 s)
-        // Velocity is measured as a fraction of MAX_VELOCITY, which is set to 40 rev/s
-        // (it's 40 rev/s as it has to greater than the actual max velocity of the wheel without any friction)
-        pc.printf("v_left = %5.2f | v_right = %5.2f \n", wheelLeft.getVelocity(), wheelRight.getVelocity());  // Print current velocity
-        wait(0.1);
-    }
-
-    // Pulses counter test
-
-    wheelLeft.startCounter();
-    wheelRight.startCounter();
-
-    for(int i=0; i<20; i++) { // Get 20 counter values (every 0.5 s)
-        pc.printf("counter_left = %d | counter_right = %d \n", wheelLeft.getCounter(), wheelRight.getCounter());  // Print current velocity
-        wait(0.5);
-    }
-
-    Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
-    motorLeft.setVoltage(1.0); // Turn the left wheel with max velocity
-
-    int initial_counter_value = wheelLeft.getCounter();
-    wait(5);
-    int final_counter_value = wheelLeft.getCounter();
-    int max_velocity = (( (final_counter_value - initial_counter_value) / 5) / PULSES_PER_REV);
-
-    motorLeft.setVoltage(0.0); // Turn off the left motor
-    pc.printf("Max velocity = %d rev/s \n", max_velocity);  // Print the average velocity when "setVoltage(1.0)"
-
-    wheelLeft.stopCounter();
-    wheelRight.stopCounter();
-
-    // Velocity measurement test
-
-    for(int i=0; i<100; i++) { // Get 100 velocity readings (every 0.1 s)
-        pc.printf("v_left = %5.2f | v_right = %5.2f \n", wheelLeft.getVelocity(), wheelRight.getVelocity());  // Print current velocity
-        wait(0.1);
-    }
-}
-
-void propulsionClassTest() {
-    /* Use this test to:
-        --> Check if you can control the velocity and the angle of movement for the buggy (test different angles and velocities)
-        --> Check if the buggy moves in a straight line when "drive(0.0, speed)"
-        --> Check if the velocity stays const. irrespective of the friction / slope of the track
-        --> Check if the angle stays const. over time
-        --> Check if the turnaround() makes the buggy turn by exactly 180 degrees
-    */
-
-    Propulsion motors;
-    wait(1); // Wait for 1 s before the test
-    while(1){
-        motors.drive(0.2, 0.2); // drive(angle, velocity), angle = -1.0 - 1.0 (only right motor) and velocity = 0.0 - 1.0 (MAX_VELOCITY)
-    }
-    wait(10); // Test driving for 10 seconds and test turnaround
-    motors.drive(0.0, 0.0);
-    motors.turnaround();
-}
-
-void sensorClassTest() {
-    /* Use this test to:
-        --> Check if every sensor works fine and returns a reading between 0.0 and 1.0
-        --> Check ff the ambient reading is relatively small (e.g. <0.1)
-        --> Check if there is a clear difference in the reading above white and black lines
-        --> Check if detected() method works fine and is robust (always returns the correct value)
-    */
-
-    Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
-    pc.printf("\nSensoorClassTest initialised\n");  // Print a message
-
-    Sensor U1(PIN_SENSOR_OUT1, PIN_SENSOR_IN1);
-    Sensor U2(PIN_SENSOR_OUT2, PIN_SENSOR_IN2);
-    Sensor U3(PIN_SENSOR_OUT3, PIN_SENSOR_IN3);
-    Sensor U4(PIN_SENSOR_OUT4, PIN_SENSOR_IN4);
-    Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
-    Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
-
-    pc.printf("\n\nAmbient readings:\n");  // Print a message
-    for(int i=0; i<10; i++) { // Print 10 readings of the ambient IR light (every 1 s)
-        pc.printf("\n%4.2f | %4.2f | %4.2f | %4.2f | %4.2f | %4.2f",
-                  U1.getAmbient(), U2.getAmbient(), U3.getAmbient(), U4.getAmbient(), U5.getAmbient(), U6.getAmbient());
-        wait(1);
-    }
-
-    pc.printf("\n\nIR readings:\n");  // Print a message
-    for(int i=0; i<10; i++) { // Print 10 readings of the reflected IR light (every 1 s)
-        pc.printf("\n%4.2f | %4.2f | %4.2f | %4.2f | %4.2f | %4.2f", U1.read(), U2.read(), U3.read(), U4.read(), U5.read(), U6.read());
-        wait(1);
-    }
-
-    pc.printf("\n\n Detected:\n");  // Print a message
-    for(int i=0; i<10; i++) { // Print 10 values of the detected/not-detected (every 1 s)
-        pc.printf("\n%d | %d | %d | %d | %d | %d",
-                  U1.detected(), U2.detected(), U3.detected(), U4.detected(), U5.detected(), U6.detected());
-        wait(1);
-    }
-}
-
-void followTrackTest() {
-    Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
-    Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
-
-    motorLeft.setDirection(FORWARD);   // Test motors for FORWARD and BACKWARD directions
-    motorRight.setDirection(FORWARD);
-
-    motorLeft.setVoltage(0.0);     // Set the speed for motor1
-    motorRight.setVoltage(0.0);    // Set the speed for motor2
-    wait(1);
-    Sensor U1(PIN_SENSOR_OUT1, PIN_SENSOR_IN1);
-    Sensor U2(PIN_SENSOR_OUT2, PIN_SENSOR_IN2);
-    Sensor U3(PIN_SENSOR_OUT3, PIN_SENSOR_IN3);
-    Sensor U4(PIN_SENSOR_OUT4, PIN_SENSOR_IN4);
-    Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
-    Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
-    
-    while(1) {
-        while(U1.detected() == false){
-            motorLeft.setVoltage(0.50);
-            motorRight.setVoltage(0.60);
-        }
-        wait(0.02);
-        while(U2.detected() == false){
-            motorLeft.setVoltage(0.60);
-            motorRight.setVoltage(0.50);    
-        }
-        wait(0.02);
-    }
-}
-
-void followTrackPropulsion(){
-    Propulsion motors;
-    wait(1);
-    Sensor U1(PIN_SENSOR_OUT1, PIN_SENSOR_IN1);
-    Sensor U2(PIN_SENSOR_OUT2, PIN_SENSOR_IN2);
-    Sensor U3(PIN_SENSOR_OUT3, PIN_SENSOR_IN3);
-    Sensor U4(PIN_SENSOR_OUT4, PIN_SENSOR_IN4);
-    Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
-    Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
-    
-    while(1) {
-        while(U1.detected() == false){
-            motors.drive(0.07, 0.12); // Slowly drive left to look for the track
-        }
-        while(U2.detected() == false){
-            motors.drive(0.12, 0.07); // Slowly drive right to look for the track    
-        }
-    }
-}
-
 /* ------------------------------- Main function ------------------------------- */
 int main() {
 
-    // motorClassTest();
-    // encoderClassTest();
-    // propulsionClassTest();
-    // sensorClassTest();
-    // trackControlClassTest();
-    // followTrackTest();
-    // followTrackPropulsion();
+    Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
+    Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
 
-    while(1) {}
+    motorLeft.setDirection(FORWARD);
+    motorRight.setDirection(FORWARD);
+    motorLeft.setVoltage(0.0);  // Stop both motors
+    motorRight.setVoltage(0.0);
+    wait(1);    // Wait for the motors to stop spinning and to give some time to place the buggy on track
+
+    Sensor U1(PIN_SENSOR_OUT1, PIN_SENSOR_IN1);
+    Sensor U2(PIN_SENSOR_OUT2, PIN_SENSOR_IN2);
+    Sensor U3(PIN_SENSOR_OUT3, PIN_SENSOR_IN3);
+    Sensor U4(PIN_SENSOR_OUT4, PIN_SENSOR_IN4);
+    Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
+    Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
+    
+    while(true) {   // Infinite loop
+        while(U1.detected() == false) { // Place the buggy initially on the right side of the line 
+            motorLeft.setVoltage(0.50); // Keep driving left until you encounter a white line
+            motorRight.setVoltage(0.60);
+        }
+        while(U2.detected() == false) {
+            motorLeft.setVoltage(0.60); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(0.50);    
+        }
+    }
 }

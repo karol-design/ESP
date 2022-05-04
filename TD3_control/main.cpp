@@ -52,7 +52,7 @@
 
 // Track control config
 #define TRACK_DETECTED_THRESHOLD 0.2f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
-#define STANDARD_VOLTAGE 0.5f           // Set the standard voltage to be applied to motors
+#define STANDARD_VOLTAGE 0.4f           // Set the standard voltage to be applied to motors
 #define TURNAROUND_VOLTAGE 0.3f         // Voltage applied to motors during the turnaround
 
 Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
@@ -284,7 +284,7 @@ int main() {
             low_speed = true;
         }
         if (U1.detected() == false && U2.detected() == false && U3.detected() == false && U4.detected() == false && U5.detected() == false && U6.detected() == false) {
-            if (stop_counter > 10) {
+            if (stop_counter > 20) {
                 motorLeft.setVoltage(0); 
                 motorRight.setVoltage(0);
                 stop_counter = 0;  

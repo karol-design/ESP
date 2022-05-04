@@ -327,20 +327,6 @@ public:
     }
 };
 
-float adjustSpeed() {
-    Encoder wheelLeft(PIN_ENCODER_L_CHA, SAMPLING_FREQUENCY);
-    Encoder wheelRight(PIN_ENCODER_R_CHA, SAMPLING_FREQUENCY);
-
-    pc.printf("v_left = %5.2f | v_right = %5.2f \n", wheelLeft.getVelocity(), wheelRight.getVelocity());  // Print current velocity
-    if(wheelLeft.getVelocity() < 0.1) {
-        speed = speed * 1.5;
-    }
-
-    if(wheelLeft.getVelocity() > 0.5) {
-        speed = speed * 0.7;
-    }
-}
-
 /* ------------------------------- Main function ------------------------------- */
 int main() {
 
@@ -362,7 +348,7 @@ int main() {
     Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
     Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
 
-    double speed = 4.0;
+    double speed = 0.4;
 
     while(true) {   // Infinite loop
 

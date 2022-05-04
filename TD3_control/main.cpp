@@ -60,6 +60,10 @@
 #define DIRECTION_STABILISATION_DELAY 0.1f // Delay between setting the direction of the buggy and measuring the error [s]
 #define TURNAROUND_VOLTAGE 0.2f         // Voltage applied to motors during the turnaround
 
+// PI_control function config
+#define KP 0.3f
+#define KI 0.002f
+
 Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
 
 /* ------------------------------- Pwm class ----------------------------------- */
@@ -326,6 +330,95 @@ public:
         return received;
     }
 };
+
+/* ------------------------------- PI_control function ----------------------------- */
+void PI_control() {
+    Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
+    Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
+
+    motorLeft.setDirection(FORWARD);
+    motorRight.setDirection(FORWARD);
+    motorLeft.setVoltage(0.0);  // Stop both motors
+    motorRight.setVoltage(0.0);
+    wait(1);    // Wait for the motors to stop spinning and to give some time to place the buggy on track
+
+    Sensor U1(PIN_SENSOR_OUT1, PIN_SENSOR_IN1);
+    Sensor U2(PIN_SENSOR_OUT2, PIN_SENSOR_IN2);
+    Sensor U3(PIN_SENSOR_OUT3, PIN_SENSOR_IN3);
+    Sensor U4(PIN_SENSOR_OUT4, PIN_SENSOR_IN4);
+    Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
+    Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
+
+    float error; // proportianal and integral counter
+    double change; // change we should make
+    float error_sum_U1 = 0; //calculate the sum of the error
+    float error_sum_U2 = 0; //calculate the sum of the error
+
+    while(1) { //loop
+
+        if (U1.detected() == true && U2.detected() == true)
+        {
+            error_sum_U1 = 0;
+            error_sum_U2 = 0;
+            change = 0;
+            motorLeft.setVoltage(0.30); // Keep driving left until you encounter a white line
+            motorRight.setVoltage(0.30);
+        }  
+        if (U3.detected() == true) // when U3 detected line 
+        {
+            error_sum_U1 = 0;
+            error_sum_U2 = 0;
+            change = 0;
+            motorLeft.setVoltage(0.40); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(0.30); 
+            wait(0.05); 
+        }
+        if (U4.detected() == true) // when U4 detected line
+        {
+            error_sum_U1 = 0;
+            error_sum_U2 = 0;
+            change = 0;
+            motorLeft.setVoltage(0.30); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(0.40);  
+            wait(0.05); 
+        }
+        if (U5.detected() == true)
+        {
+            error_sum_U1 = 0;
+            error_sum_U2 = 0;
+            motorLeft.setVoltage(0.55); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(0.20); 
+            wait(0.25);   
+        }
+        if (U6.detected() == true)
+        {
+            error_sum_U1 = 0;
+            error_sum_U2 = 0;
+            motorLeft.setVoltage(0.20); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(0.55); 
+            wait(0.25);     
+        }
+            if (U1.detected() == false) //U1 is on the black and U2 is on the white
+        {
+            error = TRACK_DETECTED_THRESHOLD - U1.read(); //calculate the error
+            error_sum_U1 = error_sum_U1 + error; // get the sum of the error
+            error_sum_U2 = 0;
+            change = KP*error + KI*error_sum_U1;  // PI contorl algorium
+            motorLeft.setVoltage(0.35*(1+change)); // Keep driving left until you encounter a white line
+            motorRight.setVoltage(0.35);
+        }
+        if (U2.detected() == false)//U1 is on the white and U2 is on the black
+        {
+            error = TRACK_DETECTED_THRESHOLD - U2.read(); 
+            error_sum_U2 = error_sum_U2 + error;
+            error_sum_U1 = 0;
+            change = KP*error + KI*error_sum_U2;  
+            motorLeft.setVoltage(0.35); // Keep driving left until you encounter a white line
+            motorRight.setVoltage(0.35*(1+change));
+        }
+
+        }
+}
 
 /* ------------------------------- Main function ------------------------------- */
 int main() {

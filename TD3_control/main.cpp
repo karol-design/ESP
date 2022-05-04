@@ -47,7 +47,7 @@
 #define SPEED_ERROR_COEF 0.7f           // Proportional coefficient (controller) for speed control [no units]
 #define SPEED_STABILISATION_DELAY 0.025f // Delay between setting and measuring the speed to see if it is equal to the desired speed [s]
 #define MAX_SPEED_ERROR 0.06f           // Max speed error [fraction of MAX_VELOCITY]
-#define TURNAROUND_PULSES 320           // Number of pulses for both motors to make turn the buggy by 180 degrees
+#define TURNAROUND_PULSES 310           // Number of pulses for both motors to make turn the buggy by 180 degrees
 
 // Motors control config
 #define SWITCHING_FREQUENCY 10000.0f    // Set PWM switching frequency to 10 kHz (100 us period) [Hz]

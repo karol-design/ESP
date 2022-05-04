@@ -327,11 +327,27 @@ public:
     }
 };
 
+float adjustSpeed() {
+    Encoder wheelLeft(PIN_ENCODER_L_CHA, SAMPLING_FREQUENCY);
+    Encoder wheelRight(PIN_ENCODER_R_CHA, SAMPLING_FREQUENCY);
+
+    pc.printf("v_left = %5.2f | v_right = %5.2f \n", wheelLeft.getVelocity(), wheelRight.getVelocity());  // Print current velocity
+    if(wheelLeft.getVelocity() < 0.1) {
+        speed = speed * 1.5;
+    }
+
+    if(wheelLeft.getVelocity() > 0.5) {
+        speed = speed * 0.7;
+    }
+}
+
 /* ------------------------------- Main function ------------------------------- */
 int main() {
 
     Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
     Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
+    Encoder wheelLeft(PIN_ENCODER_L_CHA, SAMPLING_FREQUENCY);
+    Encoder wheelRight(PIN_ENCODER_R_CHA, SAMPLING_FREQUENCY);
 
     motorLeft.setDirection(FORWARD);
     motorRight.setDirection(FORWARD);
@@ -345,15 +361,77 @@ int main() {
     Sensor U4(PIN_SENSOR_OUT4, PIN_SENSOR_IN4);
     Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
     Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
-    
+
+    double speed = 4.0;
+
     while(true) {   // Infinite loop
-        while(U1.detected() == false) { // Place the buggy initially on the right side of the line 
-            motorLeft.setVoltage(0.50); // Keep driving left until you encounter a white line
-            motorRight.setVoltage(0.60);
+
+        if (U3.detected() == true) // when U3 detected line 
+    {
+            motorLeft.setVoltage(speed*1.2); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(speed); 
+            continue;
+    }
+        if (U4.detected() == true) // when U4 detected line
+    {
+            motorLeft.setVoltage(speed); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(speed*1.2);  
+            continue;
+    }
+        if (U5.detected() == true)
+    {
+            motorLeft.setVoltage(speed*1.5); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(speed/2); 
+            wait(0.28);    
+            continue;
+    }
+        if (U6.detected() == true)
+    {
+            motorLeft.setVoltage(speed/2); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(speed*1.5); 
+            wait(0.28);   
+            continue;
+    }
+        if (U1.detected() == true && U2.detected() == true) { // Place the buggy initially on the right side of the line 
+            motorLeft.setVoltage(speed*1.15); // Keep driving left until you encounter a white line
+            motorRight.setVoltage(speed*1.15);
+    }    
+        if (U1.detected() == false) { // Place the buggy initially on the right side of the line 
+            motorLeft.setVoltage(speed); // Keep driving left until you encounter a white line
+            motorRight.setVoltage(speed*1.15);
+    }
+        if (U2.detected() == false) {
+            motorLeft.setVoltage(speed*1.15); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(speed);    
+    }
+    pc.printf("v_left = %5.2f | v_right = %5.2f \n", wheelLeft.getVelocity(), wheelRight.getVelocity());  // Print current velocity
+    
+    bool high_speed = false;
+    bool low_speed = false;
+    int high_speed_counter = 0;
+    int high_speed_counter = 0;
+    
+    if(wheelLeft.getVelocity() < 0.1 && high_speed = false) {
+        if(high_speed_counter > 5) {
+            speed = 0.6;
+            high_speed = true;
+            low_speed = false;
+            high_speed_counter = 0;
+        } else {
+            high_speed_counter++;
         }
-        while(U2.detected() == false) {
-            motorLeft.setVoltage(0.60); // Keep driving right until you encounter a white line
-            motorRight.setVoltage(0.50);    
+    } else if(wheelLeft.getVelocity() > 0.5 && low_speed = false) {
+        if(low_speed_counter > 2) {
+            speed = 0.2;
+            high_speed = false;
+            low_speed = true;
+            low_speed_counter = 0;
+        } else {
+            low_speed_counter++;
         }
+    } else {
+        speed = 0.4;
+    }
+
     }
 }

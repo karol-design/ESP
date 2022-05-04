@@ -295,14 +295,14 @@ int main() {
         }
         if (U5.detected() == true) {
             speed = STANDARD_VOLTAGE;
-            motorLeft.setVoltage(speed*1.4f); // Keep driving right until you encounter a white line
-            motorRight.setVoltage(speed/1.4f); 
+            motorLeft.setVoltage(speed*1.3f); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(speed/1.3f); 
             continue;
         }
         if (U6.detected() == true) {
             speed = STANDARD_VOLTAGE;
-            motorLeft.setVoltage(speed/1.4f); // Keep driving right until you encounter a white line
-            motorRight.setVoltage(speed*1.4f); 
+            motorLeft.setVoltage(speed/1.3f); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(speed*1.3f); 
             continue;
         }
         if (U3.detected() == true) { // when U3 detected line 

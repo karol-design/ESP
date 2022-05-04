@@ -253,14 +253,14 @@ public:
 
         while(left_finished == false || right_finished == false) {
             if(wheelLeft.getCounter() < TURNAROUND_PULSES) {
-                motorLeft.setVoltage(0.2);    // Set the speed of 30% for the left motor
+                motorLeft.setVoltage(TURNAROUND_VOLTAGE);    // Set the speed of 30% for the left motor
             } else {
                 motorLeft.setVoltage(0.0);    // Turn off the left motor
                 left_finished = true;
             }
 
             if(wheelRight.getCounter() < TURNAROUND_PULSES) {
-                motorRight.setVoltage(0.2);    // Set the speed of 30% for the right motor
+                motorRight.setVoltage(TURNAROUND_VOLTAGE);    // Set the speed of 30% for the right motor
             } else {
                 motorRight.setVoltage(0.0);    // Turn off the right motor
                 right_finished = true;

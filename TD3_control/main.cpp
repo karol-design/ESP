@@ -58,7 +58,7 @@
 #define TRACK_DETECTED_THRESHOLD 0.2f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
 #define ANGLE_CORRECTION_COEF 0.5f      // Proportional coefficient (controller) for angle correction [no units]
 #define DIRECTION_STABILISATION_DELAY 0.1f // Delay between setting the direction of the buggy and measuring the error [s]
-#define TURNAROUND_VOLTAGE 0.2f         // Voltage applied to motors during the turnaround
+#define TURNAROUND_VOLTAGE 0.3f         // Voltage applied to motors during the turnaround
 
 // PI_control function config
 #define KP 0.3f
@@ -422,6 +422,7 @@ void PI_control() {
 
 /* ------------------------------- Main function ------------------------------- */
 int main() {
+    Bluetooth bt(PIN_BT_TX, PIN_BT_RX); // Initialise Bluetooth object
 
     Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
     Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
@@ -432,7 +433,8 @@ int main() {
     motorRight.setDirection(FORWARD);
     motorLeft.setVoltage(0.0);  // Stop both motors
     motorRight.setVoltage(0.0);
-    wait(1);    // Wait for the motors to stop spinning and to give some time to place the buggy on track
+    pc.printf("Start the test\n");
+    wait(3);    // Wait for the motors to stop spinning and to give some time to place the buggy on track
 
     Sensor U1(PIN_SENSOR_OUT1, PIN_SENSOR_IN1);
     Sensor U2(PIN_SENSOR_OUT2, PIN_SENSOR_IN2);
@@ -441,76 +443,123 @@ int main() {
     Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
     Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
 
-    double speed = 0.4;
-
-    while(true) {   // Infinite loop
-
-        if (U3.detected() == true) // when U3 detected line 
-    {
-            motorLeft.setVoltage(speed*1.2); // Keep driving right until you encounter a white line
-            motorRight.setVoltage(speed); 
-            continue;
-    }
-        if (U4.detected() == true) // when U4 detected line
-    {
-            motorLeft.setVoltage(speed); // Keep driving right until you encounter a white line
-            motorRight.setVoltage(speed*1.2);  
-            continue;
-    }
-        if (U5.detected() == true)
-    {
-            motorLeft.setVoltage(speed*1.5); // Keep driving right until you encounter a white line
-            motorRight.setVoltage(speed/2); 
-            wait(0.28);    
-            continue;
-    }
-        if (U6.detected() == true)
-    {
-            motorLeft.setVoltage(speed/2); // Keep driving right until you encounter a white line
-            motorRight.setVoltage(speed*1.5); 
-            wait(0.28);   
-            continue;
-    }
-        if (U1.detected() == true && U2.detected() == true) { // Place the buggy initially on the right side of the line 
-            motorLeft.setVoltage(speed*1.15); // Keep driving left until you encounter a white line
-            motorRight.setVoltage(speed*1.15);
-    }    
-        if (U1.detected() == false) { // Place the buggy initially on the right side of the line 
-            motorLeft.setVoltage(speed); // Keep driving left until you encounter a white line
-            motorRight.setVoltage(speed*1.15);
-    }
-        if (U2.detected() == false) {
-            motorLeft.setVoltage(speed*1.15); // Keep driving right until you encounter a white line
-            motorRight.setVoltage(speed);    
-    }
-    pc.printf("v_left = %5.2f | v_right = %5.2f \n", wheelLeft.getVelocity(), wheelRight.getVelocity());  // Print current velocity
-    
+    double speed = 0.5;
     bool high_speed = false;
     bool low_speed = false;
     int high_speed_counter = 0;
-    int high_speed_counter = 0;
-    
-    if(wheelLeft.getVelocity() < 0.1 && high_speed = false) {
-        if(high_speed_counter > 5) {
-            speed = 0.6;
-            high_speed = true;
-            low_speed = false;
-            high_speed_counter = 0;
-        } else {
-            high_speed_counter++;
-        }
-    } else if(wheelLeft.getVelocity() > 0.5 && low_speed = false) {
-        if(low_speed_counter > 2) {
-            speed = 0.2;
-            high_speed = false;
-            low_speed = true;
-            low_speed_counter = 0;
-        } else {
-            low_speed_counter++;
-        }
-    } else {
-        speed = 0.4;
-    }
+    int low_speed_counter = 0;
+    int stop_counter = 0;
 
+    while(true) {   // Infinite loop
+    
+        if (bt.commandReceived()) { // If the command has been received
+            wheelLeft.startCounter();   // Start counters for both wheels to measure the exact number of pulses from encoders
+            wheelRight.startCounter();
+            bool left_finished = false;         // Left wheel finished making required number of revolutions/pulses
+            bool right_finished = false;        // Right wheel finished -||-
+            motorLeft.setDirection(BACKWARD);   // Change the direction of the left motor to BACKWARD for the duration of turnaround
+
+            while(left_finished == false || right_finished == false) {
+                if(wheelLeft.getCounter() < TURNAROUND_PULSES) {
+                    motorLeft.setVoltage(TURNAROUND_VOLTAGE);    // Set the speed of 30% for the left motor
+                } else {
+                    motorLeft.setVoltage(0.0);    // Turn off the left motor
+                    left_finished = true;
+                }
+
+                if(wheelRight.getCounter() < TURNAROUND_PULSES) {
+                    motorRight.setVoltage(TURNAROUND_VOLTAGE);    // Set the speed of 30% for the right motor
+                } else {
+                    motorRight.setVoltage(0.0);    // Turn off the right motor
+                    right_finished = true;
+                }
+            }
+
+            motorLeft.setDirection(FORWARD);   // Change the direction for left motor back to FORWARD
+            wheelLeft.stopCounter();
+            wheelRight.stopCounter();
+        }
+        
+        pc.printf("v_left = %5.2f | v_right = %5.2f \n", wheelLeft.getVelocity(), wheelRight.getVelocity());  // Print current velocity
+
+        if(wheelLeft.getVelocity() < 0.1f && high_speed == false) {
+            pc.printf("Vel < 0.06\n");
+            if(high_speed_counter > 5) {
+                pc.printf("Vel high adj\n");
+                speed = 0.8;
+                high_speed = true;
+                low_speed = false;
+                high_speed_counter = 0;
+            } else {
+                high_speed_counter++;
+            }
+        } else if(wheelLeft.getVelocity() > 0.35f && low_speed == false) {
+            pc.printf("Vel > 0.35\n");
+                pc.printf("Vel low adj\n");
+                speed = 0.35;
+                high_speed = false;
+                low_speed = true;
+                low_speed_counter = 0;
+        } /*else if ((wheelLeft.getVelocity() > 0.1f) && (wheelLeft.getVelocity() < 0.5f) && (high_speed == true || low_speed == true)){
+            pc.printf("Back to normal\n");
+            speed = 0.4;
+            low_speed = false;
+            high_speed = false;
+        }*/
+        if (U1.detected() == false && U2.detected() == false && U3.detected() == false && U4.detected() == false && U5.detected() == false && U6.detected() == false)
+        {
+            if (stop_counter > 10)
+            {
+                motorLeft.setVoltage(0); 
+                motorRight.setVoltage(0);
+                stop_counter = 0;  
+                continue; 
+            } 
+            else
+            {
+                stop_counter++;
+            }
+        }
+        if (U5.detected() == true)
+        {
+                speed = 0.3;
+                motorLeft.setVoltage(speed*2); // Keep driving right until you encounter a white line
+                motorRight.setVoltage(speed/2); 
+                continue;
+        }
+            if (U6.detected() == true)
+        {
+                speed = 0.3;
+                motorLeft.setVoltage(speed/2); // Keep driving right until you encounter a white line
+                motorRight.setVoltage(speed*2); 
+                continue;
+        }
+            if (U3.detected() == true) // when U3 detected line 
+        {
+                motorLeft.setVoltage(speed*1.15); // Keep driving right until you encounter a white line
+                motorRight.setVoltage(speed); 
+                continue;
+        }
+            if (U4.detected() == true) // when U4 detected line
+        {
+                motorLeft.setVoltage(speed); // Keep driving right until you encounter a white line
+                motorRight.setVoltage(speed*1.15);  
+                continue;
+        }
+    
+            if (U1.detected() == true && U2.detected() == true) { // Place the buggy initially on the right side of the line 
+                motorLeft.setVoltage(speed); // Keep driving left until you encounter a white line
+                motorRight.setVoltage(speed);
+        }    
+            if (U1.detected() == false && U2.detected() == true) { // Place the buggy initially on the right side of the line 
+                motorLeft.setVoltage(speed); // Keep driving left until you encounter a white line
+                motorRight.setVoltage(speed*1.1);
+                stop_counter = 0;              
+        }
+            if (U2.detected() == false && U1.detected() == true) {
+                motorLeft.setVoltage(speed*1.1); // Keep driving right until you encounter a white line
+                motorRight.setVoltage(speed); 
+                stop_counter = 0;     
+        }
     }
 }

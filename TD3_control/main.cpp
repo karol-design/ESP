@@ -39,30 +39,21 @@
 #define PIN_SENSOR_IN5 PA_9
 #define PIN_SENSOR_IN6 PA_5
 
-// Velocity measurement and control config
+// Motors, velocity measurement and control config
+#define SWITCHING_FREQUENCY 10000.0f    // Set PWM switching frequency to 10 kHz (100 us period) [Hz]
 #define SAMPLING_FREQUENCY 45           // Velocity measurement sampling frequency [Hz]
 #define PULSES_DELTA_T_US 20000         // Delta t for pulses/s measurement [us] 
 #define PULSES_PER_REV 256              // No. of quadrature encoder pulses per revolution [no units]
 #define MAX_VELOCITY 10.0f              // Max velocity of the wheel (40 rev/s ~ 27 km/h for r=3 cm) [rev/s] 
-#define SPEED_ERROR_COEF 0.3f           // Proportional coefficient (controller) for speed control [no units]
-#define SPEED_STABILISATION_DELAY 0.025f // Delay between setting and measuring the speed to see if it is equal to the desired speed [s]
-#define MAX_SPEED_ERROR 0.06f           // Max speed error [fraction of MAX_VELOCITY]
 #define TURNAROUND_PULSES 310           // Number of pulses for both motors to make turn the buggy by 180 degrees
 
-// Motors control config
-#define SWITCHING_FREQUENCY 10000.0f    // Set PWM switching frequency to 10 kHz (100 us period) [Hz]
-#define MOTOR_VOLTAGE_OFFSET 0.0f       // Offset, i.e. point at which the motor starts to rotate [fraction of the max supply voltage]
+// Debug mode config
+#define DEBUG_MODE true                 // Turn the debug messages (serial monitor) on/off 
 
 // Track control config
-#define IR_MEASUREMENT_DELAY 0.01f      // Delay between turning IR LED on and measuring the reading from the phototransistor [s]
 #define TRACK_DETECTED_THRESHOLD 0.2f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
-#define ANGLE_CORRECTION_COEF 0.5f      // Proportional coefficient (controller) for angle correction [no units]
-#define DIRECTION_STABILISATION_DELAY 0.1f // Delay between setting the direction of the buggy and measuring the error [s]
+#define STANDARD_VOLTAGE 0.5f           // Set the standard voltage to be applied to motors
 #define TURNAROUND_VOLTAGE 0.3f         // Voltage applied to motors during the turnaround
-
-// PI_control function config
-#define KP 0.3f
-#define KI 0.002f
 
 Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
 
@@ -160,7 +151,6 @@ public:
     }
 
     void setVoltage(float voltage) {        // Set voltage (0.0 - 1.0)
-        voltage = MOTOR_VOLTAGE_OFFSET + (voltage / (1.0f / (0.90f - MOTOR_VOLTAGE_OFFSET)));  // offset to get more linear dependency, e.g. .0 -> .4, .5 -> ~.7, 1.0 -> ~1.0 
         voltage = 1.0f - voltage;           // Duty cycle reversed, i.e. 100% duty cycle disables the motor
         _motor.setDutyCycle(voltage);
     }
@@ -185,10 +175,7 @@ public:
 
     float read() {      // Get normalised reading from the phototransistor [0.0 - 1.0]
         ir_led = 1;     // Turn the IR LED on
-        // wait(IR_MEASUREMENT_DELAY);         // Wait IR_MEASUREMENT_DELAY for the IR LED to turn fully on
         float reading = (1.0f - phototransistor.read());
-        // wait(0.5f * IR_MEASUREMENT_DELAY);   // Wait 0.5 * IR_MEASUREMENT_DELAY before turning off the LED
-        // ir_led = 0;     // Turn the IR LED off
         return reading;
     }
 
@@ -223,7 +210,6 @@ public:
 /* ------------------------------- Main function ------------------------------- */
 int main() {
     Bluetooth bt(PIN_BT_TX, PIN_BT_RX); // Initialise Bluetooth object
-
     Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
     Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
     Encoder wheelLeft(PIN_ENCODER_L_CHA, SAMPLING_FREQUENCY);
@@ -233,7 +219,7 @@ int main() {
     motorRight.setDirection(FORWARD);
     motorLeft.setVoltage(0.0);  // Stop both motors
     motorRight.setVoltage(0.0);
-    pc.printf("Start the test\n");
+    if(DEBUG_MODE) {pc.printf("Start the test\n");}
     wait(3);    // Wait for the motors to stop spinning and to give some time to place the buggy on track
 
     Sensor U1(PIN_SENSOR_OUT1, PIN_SENSOR_IN1);
@@ -243,7 +229,7 @@ int main() {
     Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
     Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
 
-    double speed = 0.5;
+    double speed = STANDARD_VOLTAGE;
     bool high_speed = false;
     bool low_speed = false;
     int high_speed_counter = 0;
@@ -280,12 +266,12 @@ int main() {
             wheelRight.stopCounter();
         }
         
-        pc.printf("v_left = %5.2f | v_right = %5.2f \n", wheelLeft.getVelocity(), wheelRight.getVelocity());  // Print current velocity
+        if(DEBUG_MODE) {pc.printf("v_left = %5.2f | v_right = %5.2f \n", wheelLeft.getVelocity(), wheelRight.getVelocity());}  // Print current velocity
 
         if(wheelLeft.getVelocity() < 0.1f && high_speed == false) {
-            pc.printf("Vel < 0.06\n");
+            if(DEBUG_MODE) {pc.printf("Vel < 0.06\n");}
             if(high_speed_counter > 5) {
-                pc.printf("Vel high adj\n");
+                if(DEBUG_MODE) {pc.printf("Vel high adj\n");}
                 speed = 0.8;
                 high_speed = true;
                 low_speed = false;
@@ -294,12 +280,12 @@ int main() {
                 high_speed_counter++;
             }
         } else if(wheelLeft.getVelocity() > 0.35f && low_speed == false) {
-            pc.printf("Vel > 0.35\n");
-                pc.printf("Vel low adj\n");
-                speed = 0.35;
-                high_speed = false;
-                low_speed = true;
-                low_speed_counter = 0;
+            if(DEBUG_MODE) {pc.printf("Vel > 0.35\n");}
+            if(DEBUG_MODE) {pc.printf("Vel low adj\n");}
+            speed = 0.35;
+            high_speed = false;
+            low_speed = true;
+            low_speed_counter = 0;
         } /*else if ((wheelLeft.getVelocity() > 0.1f) && (wheelLeft.getVelocity() < 0.5f) && (high_speed == true || low_speed == true)){
             pc.printf("Back to normal\n");
             speed = 0.4;

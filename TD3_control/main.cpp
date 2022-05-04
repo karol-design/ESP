@@ -296,10 +296,10 @@ public:
 
     float read() {      // Get normalised reading from the phototransistor [0.0 - 1.0]
         ir_led = 1;     // Turn the IR LED on
-        wait(IR_MEASUREMENT_DELAY);         // Wait IR_MEASUREMENT_DELAY for the IR LED to turn fully on
+        // wait(IR_MEASUREMENT_DELAY);         // Wait IR_MEASUREMENT_DELAY for the IR LED to turn fully on
         float reading = (1.0f - phototransistor.read());
-        wait(0.5f * IR_MEASUREMENT_DELAY);   // Wait 0.5 * IR_MEASUREMENT_DELAY before turning off the LED
-        ir_led = 0;     // Turn the IR LED off
+        // wait(0.5f * IR_MEASUREMENT_DELAY);   // Wait 0.5 * IR_MEASUREMENT_DELAY before turning off the LED
+        // ir_led = 0;     // Turn the IR LED off
         return reading;
     }
 

@@ -51,18 +51,18 @@
 #define DEBUG_MODE false                 // Turn the debug messages (serial monitor) on/off 
 
 // Track control config
-#define TRACK_DETECTED_THRESHOLD 0.2f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
-#define STANDARD_VOLTAGE 0.4f           // Set the standard voltage to be applied to motors
+#define TRACK_DETECTED_THRESHOLD 0.1f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
+#define STANDARD_VOLTAGE 0.25f          // Set the standard voltage to be applied to motors
 #define TURNAROUND_VOLTAGE 0.3f         // Voltage applied to motors during the turnaround
 
-#define LOW_SPEED_THRESHOLD 0.1f        // Speed below which the voltage is increased
-#define HIGH_SPEED_THRESHOLD 0.35f      // Speed above which the voltage is decreased
-#define HIGH_SPEED_COUNTER_THRESHOLD 5  // No of low speed measurements before the voltage is increased
-#define VOLTAGE_INCREASE_COEFF 1.5f     // Amount by which the standard voltage get increased on the slope
+#define LOW_SPEED_THRESHOLD 0.03f       // Speed below which the voltage is increased
+#define HIGH_SPEED_THRESHOLD 0.99f      // Speed above which the voltage is decreased
+#define HIGH_SPEED_COUNTER_THRESHOLD 800 // No of low speed measurements before the voltage is increased
+#define VOLTAGE_INCREASE_COEFF 1.8f     // Amount by which the standard voltage get increased on the slope
 #define STOP_COUNTER_THRESHOLD 25       // No of no-line before the buggy stops
 
 #define SPEED_COEFF_3 2.00f // Speed coefficient for the highest line error
-#define SPEED_COEFF_2 1.15f
+#define SPEED_COEFF_2 1.70f
 #define SPEED_COEFF_1 1.10f
 
 /* ------------------------------- Pwm class ----------------------------------- */

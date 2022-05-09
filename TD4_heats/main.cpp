@@ -51,14 +51,14 @@
 #define DEBUG_MODE false                 // Turn the debug messages (serial monitor) on/off 
 
 // Track control config
-#define TRACK_DETECTED_THRESHOLD 0.1f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
-#define STANDARD_VOLTAGE 0.25f          // Set the standard voltage to be applied to motors
+#define TRACK_DETECTED_THRESHOLD 0.1f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V] [==> ADJUST]
+#define STANDARD_VOLTAGE 0.25f          // Set the standard voltage to be applied to motors [==> ADJUST]
 #define TURNAROUND_VOLTAGE 0.3f         // Voltage applied to motors during the turnaround
 
-#define LOW_SPEED_THRESHOLD 0.03f       // Speed below which the voltage is increased
-#define HIGH_SPEED_THRESHOLD 0.40f      // Speed above which the voltage is decreased
-#define HIGH_SPEED_COUNTER_THRESHOLD 800 // No of low speed measurements before the voltage is increased
-#define VOLTAGE_INCREASE_COEFF 2.5f     // Amount by which the standard voltage get increased on the slope
+#define LOW_SPEED_THRESHOLD 0.04f       // Speed below which the voltage is increased [==> ADJUST]
+#define HIGH_SPEED_THRESHOLD 0.45f      // Speed above which the voltage is decreased [==> ADJUST]
+#define HIGH_SPEED_COUNTER_THRESHOLD 800 // No of low speed measurements before the voltage is increased [==> ADJUST]
+#define VOLTAGE_INCREASE_COEFF 2.0f     // Amount by which the standard voltage get increased on the slope [==> ADJUST]
 #define STOP_COUNTER_THRESHOLD 25       // No of no-line before the buggy stops
 
 #define SPEED_COEFF_3 2.00f // Speed coefficient for the highest line error
@@ -233,7 +233,7 @@ int main() {
     Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
     Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
 
-    double speed = STANDARD_VOLTAGE;            // Set the initial speed
+    double speed = STANDARD_VOLTAGE;    // Set the initial speed
     bool high_speed = false;
     bool low_speed = false; // Reset 
     int high_speed_counter = 0;
@@ -249,14 +249,16 @@ int main() {
             bool right_finished = false;        // Right wheel finished -||-
             motorLeft.setDirection(BACKWARD);   // Change the direction of the left motor to BACKWARD for the duration of turnaround
 
-            while(left_finished == false || right_finished == false) {
+            while(left_finished == false) {
                 if(wheelLeft.getCounter() < TURNAROUND_PULSES) {
                     motorLeft.setVoltage(TURNAROUND_VOLTAGE);    // Set the speed of 30% for the left motor
                 } else {
                     motorLeft.setVoltage(0.0);    // Turn off the left motor
                     left_finished = true;
                 }
-
+            }
+            
+            while(right_finished == false) {
                 if(wheelRight.getCounter() < TURNAROUND_PULSES) {
                     motorRight.setVoltage(TURNAROUND_VOLTAGE);    // Set the speed of 30% for the right motor
                 } else {
@@ -279,16 +281,18 @@ int main() {
             if(high_speed_counter > HIGH_SPEED_COUNTER_THRESHOLD) { // If low speed is permament
                 if(DEBUG_MODE) {pc.printf("Voltage increased\n");}
                 speed = STANDARD_VOLTAGE*VOLTAGE_INCREASE_COEFF;    // Increase the voltage
-                high_speed = true, low_speed = false;               // Set high_speed flag
+                high_speed = true;
+                low_speed = false;               // Set high_speed flag
                 high_speed_counter = 0;                             // Reset the counter
             } else {
                 high_speed_counter++;   // Increase the counter
             }
-        } else if(wheelLeft.getVelocity() > HIGH_SPEED_THRESHOLD && low_speed == false) {   // If the speed is above the threshold
+        } else if(wheelLeft.getVelocity() > HIGH_SPEED_THRESHOLD && wheelRight.getVelocity() > HIGH_SPEED_THRESHOLD && low_speed == false) {   // If the speed is above the threshold
             if(DEBUG_MODE) {pc.printf("Velocity > %5.2f\n", HIGH_SPEED_THRESHOLD);}
             if(DEBUG_MODE) {pc.printf("Voltage decresed\n");}
             speed = STANDARD_VOLTAGE;               // Decrease the voltage immediatly
-            high_speed = false, low_speed = true;   // Set low_speed flag
+            high_speed = false;
+            low_speed = true;   // Set low_speed flag
         }
 
         /* Controlled stop */
@@ -309,6 +313,8 @@ int main() {
             speed = STANDARD_VOLTAGE;
             motorLeft.setVoltage(speed*SPEED_COEFF_3); // Keep driving right until you encounter a white line
             motorRight.setVoltage(speed/SPEED_COEFF_3); 
+            high_speed = false;
+            low_speed = false;   // Set low_speed flag
             continue;
         }
         if (U6.detected() == true) {
@@ -316,6 +322,8 @@ int main() {
             speed = STANDARD_VOLTAGE;
             motorLeft.setVoltage(speed/SPEED_COEFF_3); // Keep driving left until you encounter a white line
             motorRight.setVoltage(speed*SPEED_COEFF_3); 
+            high_speed = false;
+            low_speed = false;   // Set low_speed flag
             continue;
         }
         if (U3.detected() == true) { // when U3 detected line 

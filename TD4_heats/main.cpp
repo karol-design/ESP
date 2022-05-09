@@ -1,11 +1,14 @@
-/* Technical Demonstration 4 - Heats
+/* Technical Demonstration 3 - Control
  * Description: Final version of the firmware comprising all components required to fully control the buggy
- * Classes: Pwm, Encoder, Motor, Sensors, Bluetooth
- * Last modification: 09/05/2022
+ * Classes: Pwm, Encoder, Motor, Propulsion, Sensors, TrackControl, Buggy, Bluetooth
+ * Last modification: 12/04/2022
  */
 
 /* ------------------------------- Pre-processor directives ------------------------------- */
 #include "mbed.h"   // Mbed library
+#include "PID.h"
+
+#define RATE 0.001
 
 #define FORWARD 0   // Forward/backward direction pin logic value (for Motor class)
 #define BACKWARD 1
@@ -39,31 +42,32 @@
 #define PIN_SENSOR_IN5 PA_9
 #define PIN_SENSOR_IN6 PA_5
 
-// Motors, velocity measurement and control config
-#define SWITCHING_FREQUENCY 10000.0f    // Set PWM switching frequency to 10 kHz (100 us period) [Hz]
+// Velocity measurement and control config
 #define SAMPLING_FREQUENCY 45           // Velocity measurement sampling frequency [Hz]
 #define PULSES_DELTA_T_US 20000         // Delta t for pulses/s measurement [us] 
 #define PULSES_PER_REV 256              // No. of quadrature encoder pulses per revolution [no units]
 #define MAX_VELOCITY 10.0f              // Max velocity of the wheel (40 rev/s ~ 27 km/h for r=3 cm) [rev/s] 
+#define SPEED_ERROR_COEF 0.3f           // Proportional coefficient (controller) for speed control [no units]
+#define SPEED_STABILISATION_DELAY 0.025f // Delay between setting and measuring the speed to see if it is equal to the desired speed [s]
+#define MAX_SPEED_ERROR 0.06f           // Max speed error [fraction of MAX_VELOCITY]
 #define TURNAROUND_PULSES 310           // Number of pulses for both motors to make turn the buggy by 180 degrees
 
-// Debug mode config
-#define DEBUG_MODE false                 // Turn the debug messages (serial monitor) on/off 
+// Motors control config
+#define SWITCHING_FREQUENCY 10000.0f    // Set PWM switching frequency to 10 kHz (100 us period) [Hz]
+#define MOTOR_VOLTAGE_OFFSET 0.0f       // Offset, i.e. point at which the motor starts to rotate [fraction of the max supply voltage]
 
 // Track control config
+#define IR_MEASUREMENT_DELAY 0.01f      // Delay between turning IR LED on and measuring the reading from the phototransistor [s]
 #define TRACK_DETECTED_THRESHOLD 0.1f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
-#define STANDARD_VOLTAGE 0.25f          // Set the standard voltage to be applied to motors
+#define ANGLE_CORRECTION_COEF 0.5f      // Proportional coefficient (controller) for angle correction [no units]
+#define DIRECTION_STABILISATION_DELAY 0.1f // Delay between setting the direction of the buggy and measuring the error [s]
 #define TURNAROUND_VOLTAGE 0.3f         // Voltage applied to motors during the turnaround
 
-#define LOW_SPEED_THRESHOLD 0.03f       // Speed below which the voltage is increased
-#define HIGH_SPEED_THRESHOLD 0.99f      // Speed above which the voltage is decreased
-#define HIGH_SPEED_COUNTER_THRESHOLD 800 // No of low speed measurements before the voltage is increased
-#define VOLTAGE_INCREASE_COEFF 1.8f     // Amount by which the standard voltage get increased on the slope
-#define STOP_COUNTER_THRESHOLD 25       // No of no-line before the buggy stops
+// PI_control function config
+#define KP 0.3f
+#define KI 0.002f
 
-#define SPEED_COEFF_3 2.00f // Speed coefficient for the highest line error
-#define SPEED_COEFF_2 1.70f
-#define SPEED_COEFF_1 1.10f
+Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
 
 /* ------------------------------- Pwm class ----------------------------------- */
 class Pwm {
@@ -159,8 +163,120 @@ public:
     }
 
     void setVoltage(float voltage) {        // Set voltage (0.0 - 1.0)
+        voltage = MOTOR_VOLTAGE_OFFSET + (voltage / (1.0f / (0.90f - MOTOR_VOLTAGE_OFFSET)));  // offset to get more linear dependency, e.g. .0 -> .4, .5 -> ~.7, 1.0 -> ~1.0 
         voltage = 1.0f - voltage;           // Duty cycle reversed, i.e. 100% duty cycle disables the motor
         _motor.setDutyCycle(voltage);
+    }
+};
+
+/* ------------------------------- Propulsion class ---------------------------- */
+class Propulsion {
+
+private:
+    Motor motorLeft;
+    Motor motorRight;
+    Encoder wheelLeft;
+    Encoder wheelRight;
+
+    void setSpeedRight(float desired_speed) {    // Set speed [0.0 - 1.0] for right / left motor
+        static float speed = desired_speed;
+        float measured_speed = desired_speed;    // Start with the assumption that the speed to be set = desired_speed
+        float error = 0.0;                       // Assume that the error is 0.0
+        int counter = 0;
+        
+        error = desired_speed - wheelRight.getVelocity(); // Calculate current error
+        
+        while ((error > MAX_SPEED_ERROR || error < -MAX_SPEED_ERROR) && counter < 3) { // Adjust the speed only if the errr is to large
+            speed = speed + (SPEED_ERROR_COEF * error); // Speed based on last set speed and measured error
+            if (speed > 1.0f) {speed = 1.0f;}           // Keep the speed in 0.0 - 1.0 limits
+            if (speed < 0.0f) {speed = 0.0f;}
+            
+            motorRight.setVoltage(speed);
+            wait(SPEED_STABILISATION_DELAY); // Wait for some time to ensure the speed stabilises at the new value
+            
+            measured_speed = wheelRight.getVelocity();
+            error = desired_speed - measured_speed; // Calculate current error
+            pc.printf("\nR Speed adjust.: %.2f - %.2f = %.2f --> %.2f", desired_speed, measured_speed, error, speed);  // Print a message
+            counter++;
+        }
+    }
+    
+    void setSpeedLeft(float desired_speed) {    // Set speed [0.0 - 1.0] for right / left motor
+        static float speed = desired_speed;
+        float measured_speed = desired_speed;    // Start with the assumption that the speed to be set = desired_speed
+        float error = 0.0;                       // Assume that the error is 0.0
+        int counter = 0;
+        
+        error = desired_speed - wheelLeft.getVelocity(); // Calculate current error
+        
+        while ((error > MAX_SPEED_ERROR || error < -MAX_SPEED_ERROR) && counter < 3) { // Adjust the speed only if the errr is to large
+            speed = speed + (SPEED_ERROR_COEF * error); // Speed based on last set speed and measured error
+            if (speed > 1.0f) {speed = 1.0f;}           // Keep the speed in 0.0 - 1.0 limits
+            if (speed < 0.0f) {speed = 0.0f;}
+            
+            motorLeft.setVoltage(speed);
+            wait(SPEED_STABILISATION_DELAY); // Wait for some time to ensure the speed stabilises at the new value
+            
+            measured_speed = wheelLeft.getVelocity();
+            error = desired_speed - measured_speed; // Calculate current error
+            pc.printf("\nL Speed adjust.: %.2f - %.2f = %.2f --> %.2f", desired_speed, measured_speed, error, speed);  // Print a message
+            counter++;
+        }
+    }
+
+public:
+    Propulsion() :
+        motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY),
+        motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY),
+        wheelLeft(PIN_ENCODER_L_CHA, SAMPLING_FREQUENCY),
+        wheelRight(PIN_ENCODER_R_CHA, SAMPLING_FREQUENCY) {
+
+        motorLeft.setDirection(FORWARD);   // Test motors for FORWARD and BACKWARD directions
+        motorRight.setDirection(FORWARD);
+
+        motorLeft.setVoltage(0.0);     // Set the speed for motor1
+        motorRight.setVoltage(0.0);    // Set the speed for motor2
+    }
+
+    void drive(float left_speed, float right_speed) {
+        static bool speed_set_for_the_first_time = true;
+        if(speed_set_for_the_first_time) {
+            motorLeft.setVoltage(left_speed);
+            motorRight.setVoltage(right_speed);
+            pc.printf("\nSet default speed");  // Print a message
+            speed_set_for_the_first_time = false;
+        }
+        
+        setSpeedRight(left_speed);   // Set the speed of right motor
+        setSpeedLeft(right_speed);   // Set the speed of right motor
+    }
+
+    void turnaround() {
+        wheelLeft.startCounter();   // Start counters for both wheels to measure the exact number of pulses from encoders
+        wheelRight.startCounter();
+        bool left_finished = false;         // Left wheel finished making required number of revolutions/pulses
+        bool right_finished = false;        // Right wheel finished -||-
+        motorLeft.setDirection(BACKWARD);   // Change the direction of the left motor to BACKWARD for the duration of turnaround
+
+        while(left_finished == false || right_finished == false) {
+            if(wheelLeft.getCounter() < TURNAROUND_PULSES) {
+                motorLeft.setVoltage(TURNAROUND_VOLTAGE);    // Set the speed of 30% for the left motor
+            } else {
+                motorLeft.setVoltage(0.0);    // Turn off the left motor
+                left_finished = true;
+            }
+
+            if(wheelRight.getCounter() < TURNAROUND_PULSES) {
+                motorRight.setVoltage(TURNAROUND_VOLTAGE);    // Set the speed of 30% for the right motor
+            } else {
+                motorRight.setVoltage(0.0);    // Turn off the right motor
+                right_finished = true;
+            }
+        }
+
+        motorLeft.setDirection(FORWARD);   // Change the direction for left motor back to FORWARD
+        wheelLeft.stopCounter();
+        wheelRight.stopCounter();
     }
 };
 
@@ -173,11 +289,20 @@ private:
 
 public:
     Sensor(PinName output, PinName input) : phototransistor(output), ir_led(input) {
-        ir_led = 1;     // Turn the IR LED on by default
+        ir_led = 0;     // Turn the IR LED off by default
+    }
+
+    float getAmbient() {// Return sensor reading [0.0 - 1.0], where 0.0 means no IR light detected
+        float value = 1.0f - phototransistor.read();
+        return value;
     }
 
     float read() {      // Get normalised reading from the phototransistor [0.0 - 1.0]
-        float reading = 1.0f - phototransistor.read();
+        ir_led = 1;     // Turn the IR LED on
+        // wait(IR_MEASUREMENT_DELAY);         // Wait IR_MEASUREMENT_DELAY for the IR LED to turn fully on
+        float reading = (1.0f - phototransistor.read());
+        // wait(0.5f * IR_MEASUREMENT_DELAY);   // Wait 0.5 * IR_MEASUREMENT_DELAY before turning off the LED
+        // ir_led = 0;     // Turn the IR LED off
         return reading;
     }
 
@@ -209,11 +334,99 @@ public:
     }
 };
 
+/* ------------------------------- PI_control function ----------------------------- */
+void PI_control() {
+    Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
+    Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
+
+    motorLeft.setDirection(FORWARD);
+    motorRight.setDirection(FORWARD);
+    motorLeft.setVoltage(0.0);  // Stop both motors
+    motorRight.setVoltage(0.0);
+    wait(1);    // Wait for the motors to stop spinning and to give some time to place the buggy on track
+
+    Sensor U1(PIN_SENSOR_OUT1, PIN_SENSOR_IN1);
+    Sensor U2(PIN_SENSOR_OUT2, PIN_SENSOR_IN2);
+    Sensor U3(PIN_SENSOR_OUT3, PIN_SENSOR_IN3);
+    Sensor U4(PIN_SENSOR_OUT4, PIN_SENSOR_IN4);
+    Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
+    Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
+
+    float error; // proportianal and integral counter
+    double change; // change we should make
+    float error_sum_U1 = 0; //calculate the sum of the error
+    float error_sum_U2 = 0; //calculate the sum of the error
+
+    while(1) { //loop
+
+        if (U1.detected() == true && U2.detected() == true)
+        {
+            error_sum_U1 = 0;
+            error_sum_U2 = 0;
+            change = 0;
+            motorLeft.setVoltage(0.30); // Keep driving left until you encounter a white line
+            motorRight.setVoltage(0.30);
+        }  
+        if (U3.detected() == true) // when U3 detected line 
+        {
+            error_sum_U1 = 0;
+            error_sum_U2 = 0;
+            change = 0;
+            motorLeft.setVoltage(0.40); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(0.30); 
+            wait(0.05); 
+        }
+        if (U4.detected() == true) // when U4 detected line
+        {
+            error_sum_U1 = 0;
+            error_sum_U2 = 0;
+            change = 0;
+            motorLeft.setVoltage(0.30); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(0.40);  
+            wait(0.05); 
+        }
+        if (U5.detected() == true)
+        {
+            error_sum_U1 = 0;
+            error_sum_U2 = 0;
+            motorLeft.setVoltage(0.55); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(0.20); 
+            wait(0.25);   
+        }
+        if (U6.detected() == true)
+        {
+            error_sum_U1 = 0;
+            error_sum_U2 = 0;
+            motorLeft.setVoltage(0.20); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(0.55); 
+            wait(0.25);     
+        }
+            if (U1.detected() == false) //U1 is on the black and U2 is on the white
+        {
+            error = TRACK_DETECTED_THRESHOLD - U1.read(); //calculate the error
+            error_sum_U1 = error_sum_U1 + error; // get the sum of the error
+            error_sum_U2 = 0;
+            change = KP*error + KI*error_sum_U1;  // PI contorl algorium
+            motorLeft.setVoltage(0.35*(1+change)); // Keep driving left until you encounter a white line
+            motorRight.setVoltage(0.35);
+        }
+        if (U2.detected() == false)//U1 is on the white and U2 is on the black
+        {
+            error = TRACK_DETECTED_THRESHOLD - U2.read(); 
+            error_sum_U2 = error_sum_U2 + error;
+            error_sum_U1 = 0;
+            change = KP*error + KI*error_sum_U2;  
+            motorLeft.setVoltage(0.35); // Keep driving left until you encounter a white line
+            motorRight.setVoltage(0.35*(1+change));
+        }
+
+        }
+}
+
 /* ------------------------------- Main function ------------------------------- */
 int main() {
-    Serial pc(USBTX, NC, 115200);   // Creates an instance of a Serial Connection with default parameters (baud rate: 115200)
-
     Bluetooth bt(PIN_BT_TX, PIN_BT_RX); // Initialise Bluetooth object
+
     Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
     Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);
     Encoder wheelLeft(PIN_ENCODER_L_CHA, SAMPLING_FREQUENCY);
@@ -223,7 +436,7 @@ int main() {
     motorRight.setDirection(FORWARD);
     motorLeft.setVoltage(0.0);  // Stop both motors
     motorRight.setVoltage(0.0);
-    if(DEBUG_MODE) {pc.printf("Start the test\n");}
+    //pc.printf("Start the test\n");
     wait(3);    // Wait for the motors to stop spinning and to give some time to place the buggy on track
 
     Sensor U1(PIN_SENSOR_OUT1, PIN_SENSOR_IN1);
@@ -232,120 +445,79 @@ int main() {
     Sensor U4(PIN_SENSOR_OUT4, PIN_SENSOR_IN4);
     Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
     Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
-
-    double speed = STANDARD_VOLTAGE;            // Set the initial speed
-    bool high_speed = false;
-    bool low_speed = false; // Reset 
-    int high_speed_counter = 0;
+    float Itest = 0;
+    
+    
+    PID controller(4, 0, 0, RATE);
+     controller.setInputLimits(0.0, 3.3);
+    controller.setOutputLimits(0.0, 1.0);
+    controller.setMode(AUTO_MODE);
+    controller.setSetPoint(0.02);
+    
+    float error, speed, desiredL, desiredR, errorL, errorR;
     int stop_counter = 0;
-
+    speed = 0.65;
+    
     while(true) {   // Infinite loop
     
-        /* Bluetooth command check */
-        if (bt.commandReceived()) { // If the command has been received
-            wheelLeft.startCounter();   // Start counters for both wheels to measure the exact number of pulses from encoders
-            wheelRight.startCounter();
-            bool left_finished = false;         // Left wheel finished making required number of revolutions/pulses
-            bool right_finished = false;        // Right wheel finished -||-
-            motorLeft.setDirection(BACKWARD);   // Change the direction of the left motor to BACKWARD for the duration of turnaround
-
-            while(left_finished == false || right_finished == false) {
-                if(wheelLeft.getCounter() < TURNAROUND_PULSES) {
-                    motorLeft.setVoltage(TURNAROUND_VOLTAGE);    // Set the speed of 30% for the left motor
-                } else {
-                    motorLeft.setVoltage(0.0);    // Turn off the left motor
-                    left_finished = true;
-                }
-
-                if(wheelRight.getCounter() < TURNAROUND_PULSES) {
-                    motorRight.setVoltage(TURNAROUND_VOLTAGE);    // Set the speed of 30% for the right motor
-                } else {
-                    motorRight.setVoltage(0.0);    // Turn off the right motor
-                    right_finished = true;
-                }
-            }
-
-            motorLeft.setDirection(FORWARD);   // Change the direction for left motor back to FORWARD
-            wheelLeft.stopCounter();
-            wheelRight.stopCounter();
-        }
+    if (bt.commandReceived()) {
+        Itest += 5;
+        controller.setTunings(0.9,0, Itest);
+    }
+        error = U2.read() - U1.read();
+        controller.setProcessValue(error);
+        //pc.printf("U2: %f   U1: %f   ERROR = %f\n", U2.read(), U1.read(), controller.compute());
         
-        /* Velocities measurement */
-        if(DEBUG_MODE) {pc.printf("Velocities: v_left = %5.2f | v_right = %5.2f \n", wheelLeft.getVelocity(), wheelRight.getVelocity());}  // Print current velocity
-
-        /* Uphill low-velocity check */
-        if((wheelLeft.getVelocity() < LOW_SPEED_THRESHOLD) && (wheelRight.getVelocity() < LOW_SPEED_THRESHOLD) && (high_speed == false)) {  // If the speed is below the threshold
-            if(DEBUG_MODE) {pc.printf("Velocity < %5.2f\n", LOW_SPEED_THRESHOLD);}
-            if(high_speed_counter > HIGH_SPEED_COUNTER_THRESHOLD) { // If low speed is permament
-                if(DEBUG_MODE) {pc.printf("Voltage increased\n");}
-                speed = STANDARD_VOLTAGE*VOLTAGE_INCREASE_COEFF;    // Increase the voltage
-                high_speed = true, low_speed = false;               // Set high_speed flag
-                high_speed_counter = 0;                             // Reset the counter
-            } else {
-                high_speed_counter++;   // Increase the counter
-            }
-        } else if(wheelLeft.getVelocity() > HIGH_SPEED_THRESHOLD && low_speed == false) {   // If the speed is above the threshold
-            if(DEBUG_MODE) {pc.printf("Velocity > %5.2f\n", HIGH_SPEED_THRESHOLD);}
-            if(DEBUG_MODE) {pc.printf("Voltage decresed\n");}
-            speed = STANDARD_VOLTAGE;               // Decrease the voltage immediatly
-            high_speed = false, low_speed = true;   // Set low_speed flag
-        }
-
-        /* Controlled stop */
-        if (U1.detected() == false && U2.detected() == false && U3.detected() == false && U4.detected() == false && U5.detected() == false && U6.detected() == false) {
-            if (stop_counter > STOP_COUNTER_THRESHOLD) {        // If the no-line is permament then stop the buggy
-                motorLeft.setVoltage(0.0); 
-                motorRight.setVoltage(0.0);
+        if (U1.detected() == false && U2.detected() == false && U3.detected() == false && U4.detected() == false && U5.detected() == false && U6.detected() == false)
+        {
+            if (stop_counter > 10)
+            {
+                motorLeft.setVoltage(0); 
+                motorRight.setVoltage(0);
                 stop_counter = 0;  
                 continue; 
-            } else {
+            } 
+            else
+            {
                 stop_counter++;
             }
+        } 
+        
+        if (U5.detected() == true)
+        {
+                desiredL = speed*2;
+                desiredR = speed/2; 
+                continue;
         }
-
-        /* On-off line following algorithm */
-        if (U5.detected() == true) {
-            if(DEBUG_MODE) {pc.printf("Line tracking: U5 detected\n");} 
-            speed = STANDARD_VOLTAGE;
-            motorLeft.setVoltage(speed*SPEED_COEFF_3); // Keep driving right until you encounter a white line
-            motorRight.setVoltage(speed/SPEED_COEFF_3); 
-            continue;
+            if (U6.detected() == true)
+        {
+                desiredL = speed/2;
+                desiredR = speed*2;
+                continue;
         }
-        if (U6.detected() == true) {
-            if(DEBUG_MODE) {pc.printf("Line tracking: U6 detected\n");} 
-            speed = STANDARD_VOLTAGE;
-            motorLeft.setVoltage(speed/SPEED_COEFF_3); // Keep driving left until you encounter a white line
-            motorRight.setVoltage(speed*SPEED_COEFF_3); 
-            continue;
+            if (U3.detected() == true) // when U3 detected line 
+        {
+                desiredL = speed*1.15;
+                desiredR = speed;
+                continue;
         }
-        if (U3.detected() == true) { // when U3 detected line 
-            if(DEBUG_MODE) {pc.printf("Line tracking: U3 detected\n");} 
-            motorLeft.setVoltage(speed*SPEED_COEFF_2);
-            motorRight.setVoltage(speed); 
-            continue;
+            if (U4.detected() == true) // when U4 detected line
+        { 
+                desiredL = speed;
+                desiredR = speed*1.15; 
+                continue;
         }
-        if (U4.detected() == true) { // when U4 detected line
-            if(DEBUG_MODE) {pc.printf("Line tracking: U4 detected\n");} 
-            motorLeft.setVoltage(speed);
-            motorRight.setVoltage(speed*SPEED_COEFF_2);  
-            continue;
+            if (U1.detected() == true || U2.detected() == true) // when U4 detected line
+        {
+                desiredL = speed + controller.compute();
+                desiredR = speed - controller.compute();
+    
         }
-        if (U1.detected() == true && U2.detected() == true) { 
-            if(DEBUG_MODE) {pc.printf("Line tracking: On a line (U1 & U2)\n");} 
-            motorLeft.setVoltage(speed); // Keep driving straight
-            motorRight.setVoltage(speed);
-        }    
-        if (U1.detected() == false && U2.detected() == true) { 
-            if(DEBUG_MODE) {pc.printf("Line tracking: Turn left (~U1 & U2)\n");} 
-            motorLeft.setVoltage(speed);
-            motorRight.setVoltage(speed*SPEED_COEFF_1);
-            stop_counter = 0;              
-        }
-        if (U2.detected() == false && U1.detected() == true) {
-            if(DEBUG_MODE) {pc.printf("Line tracking: Turn left (~U2 & U1)\n");} 
-            motorLeft.setVoltage(speed*SPEED_COEFF_1);
-            motorRight.setVoltage(speed); 
-            stop_counter = 0;     
-        }
+        
+        motorLeft.setVoltage(desiredL);
+        motorRight.setVoltage(desiredR);
+        wait(RATE);
+        
+        
     }
 }

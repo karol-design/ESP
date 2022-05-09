@@ -56,13 +56,13 @@
 #define TURNAROUND_VOLTAGE 0.3f         // Voltage applied to motors during the turnaround
 
 #define LOW_SPEED_THRESHOLD 0.03f       // Speed below which the voltage is increased
-#define HIGH_SPEED_THRESHOLD 0.99f      // Speed above which the voltage is decreased
+#define HIGH_SPEED_THRESHOLD 0.40f      // Speed above which the voltage is decreased
 #define HIGH_SPEED_COUNTER_THRESHOLD 800 // No of low speed measurements before the voltage is increased
-#define VOLTAGE_INCREASE_COEFF 1.8f     // Amount by which the standard voltage get increased on the slope
+#define VOLTAGE_INCREASE_COEFF 2.5f     // Amount by which the standard voltage get increased on the slope
 #define STOP_COUNTER_THRESHOLD 25       // No of no-line before the buggy stops
 
 #define SPEED_COEFF_3 2.00f // Speed coefficient for the highest line error
-#define SPEED_COEFF_2 1.70f
+#define SPEED_COEFF_2 1.80f
 #define SPEED_COEFF_1 1.10f
 
 /* ------------------------------- Pwm class ----------------------------------- */

@@ -55,6 +55,15 @@
 #define STANDARD_VOLTAGE 0.4f           // Set the standard voltage to be applied to motors
 #define TURNAROUND_VOLTAGE 0.3f         // Voltage applied to motors during the turnaround
 
+#define LOW_SPEED_THRESHOLD 0.1f        // Speed below which the voltage is increased
+#define HIGH_SPEED_THRESHOLD 0.35f      // Speed above which the voltage is decreased
+#define HIGH_SPEED_COUNTER_THRESHOLD 5  // No of low speed measurements before the voltage is increased
+#define VOLTAGE_INCREASE_COEFF 1.5f     // Amount by which the standard voltage get increased on the slope
+
+#define SPEED_COEFF_3 2.00f // Speed coefficient for the highest line error
+#define SPEED_COEFF_2 1.15f
+#define SPEED_COEFF_1 1.10f
+
 Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
 
 /* ------------------------------- Pwm class ----------------------------------- */
@@ -165,17 +174,11 @@ private:
 
 public:
     Sensor(PinName output, PinName input) : phototransistor(output), ir_led(input) {
-        ir_led = 0;     // Turn the IR LED off by default
-    }
-
-    float getAmbient() {// Return sensor reading [0.0 - 1.0], where 0.0 means no IR light detected
-        float value = 1.0f - phototransistor.read();
-        return value;
+        ir_led = 1;     // Turn the IR LED on by default
     }
 
     float read() {      // Get normalised reading from the phototransistor [0.0 - 1.0]
-        ir_led = 1;     // Turn the IR LED on
-        float reading = (1.0f - phototransistor.read());
+        float reading = 1.0f - phototransistor.read();
         return reading;
     }
 
@@ -229,12 +232,13 @@ int main() {
     Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
     Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
 
-    double speed = STANDARD_VOLTAGE;
-    bool high_speed = false, low_speed = false;
+    double speed = STANDARD_VOLTAGE;            // Set the initial speed
+    bool high_speed = false, low_speed = false; // Reset 
     int high_speed_counter = 0, stop_counter = 0;
 
     while(true) {   // Infinite loop
     
+        /* Bluetooth command check */
         if (bt.commandReceived()) { // If the command has been received
             wheelLeft.startCounter();   // Start counters for both wheels to measure the exact number of pulses from encoders
             wheelRight.startCounter();
@@ -263,69 +267,80 @@ int main() {
             wheelRight.stopCounter();
         }
         
-        if(DEBUG_MODE) {pc.printf("v_left = %5.2f | v_right = %5.2f \n", wheelLeft.getVelocity(), wheelRight.getVelocity());}  // Print current velocity
+        /* Velocities measurement */
+        if(DEBUG_MODE) {pc.printf("Velocities: v_left = %5.2f | v_right = %5.2f \n", wheelLeft.getVelocity(), wheelRight.getVelocity());}  // Print current velocity
 
-        if(wheelLeft.getVelocity() < 0.1f && high_speed == false) {
-            if(DEBUG_MODE) {pc.printf("Vel < 0.06\n");}
-            if(high_speed_counter > 5) {
-                if(DEBUG_MODE) {pc.printf("Vel high adj\n");}
-                speed = STANDARD_VOLTAGE*1.5f;
-                high_speed = true;
-                low_speed = false;
-                high_speed_counter = 0;
+        /* Uphill low-velocity check */
+        if(wheelLeft.getVelocity() < LOW_SPEED_THRESHOLD && high_speed == false) {  // If the speed is below the threshold
+            if(DEBUG_MODE) {pc.printf("Velocity < %5.2f\n", LOW_SPEED_THRESHOLD);}
+            if(high_speed_counter > HIGH_SPEED_COUNTER_THRESHOLD) { // If low speed is permament
+                if(DEBUG_MODE) {pc.printf("Voltage increased\n");}
+                speed = STANDARD_VOLTAGE*VOLTAGE_INCREASE_COEFF;    // Increase the voltage
+                high_speed = true, low_speed = false;               // Set high_speed flag
+                high_speed_counter = 0;                             // Reset the counter
             } else {
-                high_speed_counter++;
+                high_speed_counter++;   // Increase the counter
             }
-        } else if(wheelLeft.getVelocity() > 0.35f && low_speed == false) {
-            if(DEBUG_MODE) {pc.printf("Vel > 0.35\n");}
-            if(DEBUG_MODE) {pc.printf("Vel low adj\n");}
-            speed = STANDARD_VOLTAGE;
-            high_speed = false;
-            low_speed = true;
+        } else if(wheelLeft.getVelocity() > HIGH_SPEED_THRESHOLD && low_speed == false) {   // If the speed is above the threshold
+            if(DEBUG_MODE) {pc.printf("Velocity > %5.2f\n");}
+            if(DEBUG_MODE) {pc.printf("Voltage decresed\n");}
+            speed = STANDARD_VOLTAGE;               // Decrease the voltage immediatly
+            high_speed = false, low_speed = true;   // Set low_speed flag
         }
+
+        /* Controlled stop */
         if (U1.detected() == false && U2.detected() == false && U3.detected() == false && U4.detected() == false && U5.detected() == false && U6.detected() == false) {
-            if (stop_counter > 20) {
-                motorLeft.setVoltage(0); 
-                motorRight.setVoltage(0);
+            if (stop_counter > 20) {        // If the no-line is permament then stop the buggy
+                motorLeft.setVoltage(0.0); 
+                motorRight.setVoltage(0.0);
                 stop_counter = 0;  
                 continue; 
             } else {
                 stop_counter++;
             }
         }
+
+        /* On-off line following algorithm */
         if (U5.detected() == true) {
+            if(DEBUG_MODE) {pc.printf("Line tracking: U5 detected"); 
             speed = STANDARD_VOLTAGE;
-            motorLeft.setVoltage(speed*2f); // Keep driving right until you encounter a white line
-            motorRight.setVoltage(speed/2f); 
+            motorLeft.setVoltage(speed*SPEED_COEFF_3); // Keep driving right until you encounter a white line
+            motorRight.setVoltage(speed/SPEED_COEFF_3); 
             continue;
         }
         if (U6.detected() == true) {
+            if(DEBUG_MODE) {pc.printf("Line tracking: U6 detected"); 
             speed = STANDARD_VOLTAGE;
-            motorLeft.setVoltage(speed/2f); // Keep driving right until you encounter a white line
-            motorRight.setVoltage(speed*2f); 
+            motorLeft.setVoltage(speed/SPEED_COEFF_3); // Keep driving left until you encounter a white line
+            motorRight.setVoltage(speed*SPEED_COEFF_3); 
             continue;
         }
         if (U3.detected() == true) { // when U3 detected line 
-            motorLeft.setVoltage(speed*1.15f); // Keep driving right until you encounter a white line
+            if(DEBUG_MODE) {pc.printf("Line tracking: U3 detected"); 
+            motorLeft.setVoltage(speed*SPEED_COEFF_2);
             motorRight.setVoltage(speed); 
             continue;
         }
         if (U4.detected() == true) { // when U4 detected line
-            motorLeft.setVoltage(speed); // Keep driving right until you encounter a white line
-            motorRight.setVoltage(speed*1.15f);  
+            if(DEBUG_MODE) {pc.printf("Line tracking: U4 detected"); 
+            motorLeft.setVoltage(speed);
+            motorRight.setVoltage(speed*SPEED_COEFF_2);  
             continue;
         }
-        if (U1.detected() == true && U2.detected() == true) { // Place the buggy initially on the right side of the line 
-            motorLeft.setVoltage(speed); // Keep driving left until you encounter a white line
+        if (U1.detected() == true && U2.detected() == true) { 
+            if(DEBUG_MODE) {pc.printf("Line tracking: On a line (U1 & U2)"); 
+            motorLeft.setVoltage(speed); // Keep driving straight
             motorRight.setVoltage(speed);
         }    
-        if (U1.detected() == false && U2.detected() == true) { // Place the buggy initially on the right side of the line 
-            motorLeft.setVoltage(speed); // Keep driving left until you encounter a white line
-            motorRight.setVoltage(speed*1.1f);
+        if (U1.detected() == false && U2.detected() == true) { 
+            if(DEBUG_MODE) {pc.printf("Line tracking: Turn left (~U1 & U2)"); 
+            motorLeft.setVoltage(speed);
+            motorRight.setVoltage(speed*SPEED_COEFF_1);
             stop_counter = 0;              
         }
         if (U2.detected() == false && U1.detected() == true) {
-            motorLeft.setVoltage(speed*1.1f); // Keep driving right until you encounter a white line
+            if(DEBUG_MODE) {pc.printf("Line tracking: Turn left (~U2 & U1)"); 
+            motorLeft.setVoltage(speed*SPEED_COEFF_1);
             motorRight.setVoltage(speed); 
             stop_counter = 0;     
         }

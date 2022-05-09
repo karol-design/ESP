@@ -303,44 +303,44 @@ int main() {
 
         /* On-off line following algorithm */
         if (U5.detected() == true) {
-            if(DEBUG_MODE) {pc.printf("Line tracking: U5 detected");} 
+            if(DEBUG_MODE) {pc.printf("Line tracking: U5 detected\n");} 
             speed = STANDARD_VOLTAGE;
             motorLeft.setVoltage(speed*SPEED_COEFF_3); // Keep driving right until you encounter a white line
             motorRight.setVoltage(speed/SPEED_COEFF_3); 
             continue;
         }
         if (U6.detected() == true) {
-            if(DEBUG_MODE) {pc.printf("Line tracking: U6 detected");} 
+            if(DEBUG_MODE) {pc.printf("Line tracking: U6 detected\n");} 
             speed = STANDARD_VOLTAGE;
             motorLeft.setVoltage(speed/SPEED_COEFF_3); // Keep driving left until you encounter a white line
             motorRight.setVoltage(speed*SPEED_COEFF_3); 
             continue;
         }
         if (U3.detected() == true) { // when U3 detected line 
-            if(DEBUG_MODE) {pc.printf("Line tracking: U3 detected");} 
+            if(DEBUG_MODE) {pc.printf("Line tracking: U3 detected\n");} 
             motorLeft.setVoltage(speed*SPEED_COEFF_2);
             motorRight.setVoltage(speed); 
             continue;
         }
         if (U4.detected() == true) { // when U4 detected line
-            if(DEBUG_MODE) {pc.printf("Line tracking: U4 detected");} 
+            if(DEBUG_MODE) {pc.printf("Line tracking: U4 detected\n");} 
             motorLeft.setVoltage(speed);
             motorRight.setVoltage(speed*SPEED_COEFF_2);  
             continue;
         }
         if (U1.detected() == true && U2.detected() == true) { 
-            if(DEBUG_MODE) {pc.printf("Line tracking: On a line (U1 & U2)");} 
+            if(DEBUG_MODE) {pc.printf("Line tracking: On a line (U1 & U2)\n");} 
             motorLeft.setVoltage(speed); // Keep driving straight
             motorRight.setVoltage(speed);
         }    
         if (U1.detected() == false && U2.detected() == true) { 
-            if(DEBUG_MODE) {pc.printf("Line tracking: Turn left (~U1 & U2)");} 
+            if(DEBUG_MODE) {pc.printf("Line tracking: Turn left (~U1 & U2)\n");} 
             motorLeft.setVoltage(speed);
             motorRight.setVoltage(speed*SPEED_COEFF_1);
             stop_counter = 0;              
         }
         if (U2.detected() == false && U1.detected() == true) {
-            if(DEBUG_MODE) {pc.printf("Line tracking: Turn left (~U2 & U1)");} 
+            if(DEBUG_MODE) {pc.printf("Line tracking: Turn left (~U2 & U1)\n");} 
             motorLeft.setVoltage(speed*SPEED_COEFF_1);
             motorRight.setVoltage(speed); 
             stop_counter = 0;     

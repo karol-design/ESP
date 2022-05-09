@@ -211,7 +211,7 @@ public:
 
 /* ------------------------------- Main function ------------------------------- */
 int main() {
-    Serial pc(PA_11, NC, 115200);   // Creates an instance of a Serial Connection with default parameters (baud rate: 115200)
+    Serial pc(USBTX, NC, 115200);   // Creates an instance of a Serial Connection with default parameters (baud rate: 115200)
 
     Bluetooth bt(PIN_BT_TX, PIN_BT_RX); // Initialise Bluetooth object
     Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);

@@ -48,7 +48,7 @@
 #define TURNAROUND_PULSES 310           // Number of pulses for both motors to make turn the buggy by 180 degrees
 
 // Debug mode config
-#define DEBUG_MODE false                 // Turn the debug messages (serial monitor) on/off 
+#define DEBUG_MODE true                 // Turn the debug messages (serial monitor) on/off 
 
 // Track control config
 #define TRACK_DETECTED_THRESHOLD 0.2f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
@@ -59,6 +59,7 @@
 #define HIGH_SPEED_THRESHOLD 0.35f      // Speed above which the voltage is decreased
 #define HIGH_SPEED_COUNTER_THRESHOLD 5  // No of low speed measurements before the voltage is increased
 #define VOLTAGE_INCREASE_COEFF 1.5f     // Amount by which the standard voltage get increased on the slope
+#define STOP_COUNTER_THRESHOLD 25       // No of no-line before the buggy stops
 
 #define SPEED_COEFF_3 2.00f // Speed coefficient for the highest line error
 #define SPEED_COEFF_2 1.15f
@@ -290,7 +291,7 @@ int main() {
 
         /* Controlled stop */
         if (U1.detected() == false && U2.detected() == false && U3.detected() == false && U4.detected() == false && U5.detected() == false && U6.detected() == false) {
-            if (stop_counter > 20) {        // If the no-line is permament then stop the buggy
+            if (stop_counter > STOP_COUNTER_THRESHOLD) {        // If the no-line is permament then stop the buggy
                 motorLeft.setVoltage(0.0); 
                 motorRight.setVoltage(0.0);
                 stop_counter = 0;  

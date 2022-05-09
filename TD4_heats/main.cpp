@@ -48,7 +48,7 @@
 #define TURNAROUND_PULSES 310           // Number of pulses for both motors to make turn the buggy by 180 degrees
 
 // Debug mode config
-#define DEBUG_MODE true                 // Turn the debug messages (serial monitor) on/off 
+#define DEBUG_MODE false                 // Turn the debug messages (serial monitor) on/off 
 
 // Track control config
 #define TRACK_DETECTED_THRESHOLD 0.2f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V]
@@ -64,8 +64,6 @@
 #define SPEED_COEFF_3 2.00f // Speed coefficient for the highest line error
 #define SPEED_COEFF_2 1.15f
 #define SPEED_COEFF_1 1.10f
-
-Serial pc(PA_11, NC);   // Creates an instance of a Serial Connection with default parameters (baud rate: 9600)
 
 /* ------------------------------- Pwm class ----------------------------------- */
 class Pwm {
@@ -213,6 +211,8 @@ public:
 
 /* ------------------------------- Main function ------------------------------- */
 int main() {
+    Serial pc(PA_11, NC, 115200);   // Creates an instance of a Serial Connection with default parameters (baud rate: 115200)
+
     Bluetooth bt(PIN_BT_TX, PIN_BT_RX); // Initialise Bluetooth object
     Motor motorLeft(PIN_MOTOR_L_MODE, PIN_MOTOR_L_DIR, PIN_MOTOR_L_PWM, SWITCHING_FREQUENCY);
     Motor motorRight(PIN_MOTOR_R_MODE, PIN_MOTOR_R_DIR, PIN_MOTOR_R_PWM, SWITCHING_FREQUENCY);

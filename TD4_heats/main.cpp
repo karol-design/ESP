@@ -272,7 +272,7 @@ int main() {
         if(DEBUG_MODE) {pc.printf("Velocities: v_left = %5.2f | v_right = %5.2f \n", wheelLeft.getVelocity(), wheelRight.getVelocity());}  // Print current velocity
 
         /* Uphill low-velocity check */
-        if(wheelLeft.getVelocity() < LOW_SPEED_THRESHOLD && high_speed == false) {  // If the speed is below the threshold
+        if((wheelLeft.getVelocity() < LOW_SPEED_THRESHOLD) && (wheelRight.getVelocity() < LOW_SPEED_THRESHOLD) && (high_speed == false)) {  // If the speed is below the threshold
             if(DEBUG_MODE) {pc.printf("Velocity < %5.2f\n", LOW_SPEED_THRESHOLD);}
             if(high_speed_counter > HIGH_SPEED_COUNTER_THRESHOLD) { // If low speed is permament
                 if(DEBUG_MODE) {pc.printf("Voltage increased\n");}

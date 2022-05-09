@@ -234,8 +234,10 @@ int main() {
     Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
 
     double speed = STANDARD_VOLTAGE;            // Set the initial speed
-    bool high_speed = false, low_speed = false; // Reset 
-    int high_speed_counter = 0, stop_counter = 0;
+    bool high_speed = false;
+    bool low_speed = false; // Reset 
+    int high_speed_counter = 0;
+    int stop_counter = 0;
 
     while(true) {   // Infinite loop
     

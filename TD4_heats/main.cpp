@@ -52,17 +52,17 @@
 
 // Track control config
 #define TRACK_DETECTED_THRESHOLD 0.1f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V] [==> ADJUST]
-#define STANDARD_VOLTAGE 0.3f          // Set the standard voltage to be applied to motors [==> ADJUST]
-#define TURNAROUND_VOLTAGE 0.25f         // Voltage applied to motors during the turnaround
+#define STANDARD_VOLTAGE 0.35f          // Set the standard voltage to be applied to motors [==> ADJUST]
+#define TURNAROUND_VOLTAGE 0.3f         // Voltage applied to motors during the turnaround
 
-#define LOW_SPEED_THRESHOLD 0.02f       // Speed below which the voltage is increased
-#define HIGH_SPEED_THRESHOLD 0.30f      // Speed above which the voltage is decreased [==> ADJUST]
+#define LOW_SPEED_THRESHOLD 0.06f       // Speed below which the voltage is increased
+#define HIGH_SPEED_THRESHOLD 0.35f      // Speed above which the voltage is decreased [==> ADJUST]
 #define HIGH_SPEED_COUNTER_THRESHOLD 1000 // No of low speed measurements before the voltage is increased [==> ADJUST]
 #define VOLTAGE_INCREASE_COEFF 1.9f     // Amount by which the standard voltage get increased on the slope [==> ADJUST]
 #define STOP_COUNTER_THRESHOLD 25       // No of no-line before the buggy stops
 
 #define SPEED_COEFF_3 2.00f // Speed coefficient for the highest line error
-#define SPEED_COEFF_2 1.80f
+#define SPEED_COEFF_2 2.00f
 #define SPEED_COEFF_1 1.10f
 
 /* ------------------------------- Pwm class ----------------------------------- */
@@ -275,7 +275,7 @@ int main() {
             wheelLeft.stopCounter();
             wheelRight.stopCounter();
             
-            speed = STANDARD_VOLTAGE;
+            speed = STANDARD_VOLTAGE*0.6f;
             high_speed = false;
             low_speed = false;
         }

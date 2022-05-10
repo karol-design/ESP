@@ -62,7 +62,7 @@
 #define STOP_COUNTER_THRESHOLD 25       // No of no-line before the buggy stops
 
 #define SPEED_COEFF_3 2.00f // Speed coefficient for the highest line error
-#define SPEED_COEFF_2 2.00f
+#define SPEED_COEFF_2 2.10f
 #define SPEED_COEFF_1 1.10f
 
 /* ------------------------------- Pwm class ----------------------------------- */
@@ -275,7 +275,7 @@ int main() {
             wheelLeft.stopCounter();
             wheelRight.stopCounter();
             
-            speed = STANDARD_VOLTAGE*0.6f;
+            speed = STANDARD_VOLTAGE*0.3f;
             high_speed = false;
             low_speed = false;
         }
@@ -295,7 +295,8 @@ int main() {
             } else {
                 high_speed_counter++;   // Increase the counter
             }
-        } else if(wheelLeft.getVelocity() > HIGH_SPEED_THRESHOLD && wheelRight.getVelocity() > HIGH_SPEED_THRESHOLD && low_speed == false) {   // If the speed is above the threshold
+        } 
+        else if(wheelLeft.getVelocity() > HIGH_SPEED_THRESHOLD && wheelRight.getVelocity() > HIGH_SPEED_THRESHOLD && low_speed == false) {   // If the speed is above the threshold
             if(DEBUG_MODE) {pc.printf("Velocity > %5.2f\n", HIGH_SPEED_THRESHOLD);}
             if(DEBUG_MODE) {pc.printf("Voltage decresed\n");}
             speed = STANDARD_VOLTAGE;               // Decrease the voltage immediatly

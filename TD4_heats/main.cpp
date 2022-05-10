@@ -52,13 +52,13 @@
 
 // Track control config
 #define TRACK_DETECTED_THRESHOLD 0.1f   // Threshold value above which track_detected = true [voltage drop as a fraction of 3.3 V] [==> ADJUST]
-#define STANDARD_VOLTAGE 0.25f          // Set the standard voltage to be applied to motors [==> ADJUST]
-#define TURNAROUND_VOLTAGE 0.3f         // Voltage applied to motors during the turnaround
+#define STANDARD_VOLTAGE 0.3f          // Set the standard voltage to be applied to motors [==> ADJUST]
+#define TURNAROUND_VOLTAGE 0.25f         // Voltage applied to motors during the turnaround
 
-#define LOW_SPEED_THRESHOLD 0.04f       // Speed below which the voltage is increased [==> ADJUST]
-#define HIGH_SPEED_THRESHOLD 0.45f      // Speed above which the voltage is decreased [==> ADJUST]
-#define HIGH_SPEED_COUNTER_THRESHOLD 800 // No of low speed measurements before the voltage is increased [==> ADJUST]
-#define VOLTAGE_INCREASE_COEFF 2.0f     // Amount by which the standard voltage get increased on the slope [==> ADJUST]
+#define LOW_SPEED_THRESHOLD 0.02f       // Speed below which the voltage is increased
+#define HIGH_SPEED_THRESHOLD 0.30f      // Speed above which the voltage is decreased [==> ADJUST]
+#define HIGH_SPEED_COUNTER_THRESHOLD 1000 // No of low speed measurements before the voltage is increased [==> ADJUST]
+#define VOLTAGE_INCREASE_COEFF 1.9f     // Amount by which the standard voltage get increased on the slope [==> ADJUST]
 #define STOP_COUNTER_THRESHOLD 25       // No of no-line before the buggy stops
 
 #define SPEED_COEFF_3 2.00f // Speed coefficient for the highest line error
@@ -233,9 +233,10 @@ int main() {
     Sensor U5(PIN_SENSOR_OUT5, PIN_SENSOR_IN5);
     Sensor U6(PIN_SENSOR_OUT6, PIN_SENSOR_IN6);
 
-    double speed = STANDARD_VOLTAGE;    // Set the initial speed
+    double speed = STANDARD_VOLTAGE;            // Set the initial speed
     bool high_speed = false;
     bool low_speed = false; // Reset 
+    bool buggy_moving = false;
     int high_speed_counter = 0;
     int stop_counter = 0;
 
@@ -243,6 +244,9 @@ int main() {
     
         /* Bluetooth command check */
         if (bt.commandReceived()) { // If the command has been received
+            motorLeft.setVoltage(0.0);  // Stop both motors
+            motorRight.setVoltage(0.0);
+            wait(1);
             wheelLeft.startCounter();   // Start counters for both wheels to measure the exact number of pulses from encoders
             wheelRight.startCounter();
             bool left_finished = false;         // Left wheel finished making required number of revolutions/pulses
@@ -270,13 +274,17 @@ int main() {
             motorLeft.setDirection(FORWARD);   // Change the direction for left motor back to FORWARD
             wheelLeft.stopCounter();
             wheelRight.stopCounter();
+            
+            speed = STANDARD_VOLTAGE;
+            high_speed = false;
+            low_speed = false;
         }
         
         /* Velocities measurement */
         if(DEBUG_MODE) {pc.printf("Velocities: v_left = %5.2f | v_right = %5.2f \n", wheelLeft.getVelocity(), wheelRight.getVelocity());}  // Print current velocity
 
         /* Uphill low-velocity check */
-        if((wheelLeft.getVelocity() < LOW_SPEED_THRESHOLD) && (wheelRight.getVelocity() < LOW_SPEED_THRESHOLD) && (high_speed == false)) {  // If the speed is below the threshold
+        if((wheelLeft.getVelocity() < LOW_SPEED_THRESHOLD) && (wheelRight.getVelocity() < LOW_SPEED_THRESHOLD) && (high_speed == false) && (buggy_moving == true)) {  // If the speed is below the threshold
             if(DEBUG_MODE) {pc.printf("Velocity < %5.2f\n", LOW_SPEED_THRESHOLD);}
             if(high_speed_counter > HIGH_SPEED_COUNTER_THRESHOLD) { // If low speed is permament
                 if(DEBUG_MODE) {pc.printf("Voltage increased\n");}
@@ -301,6 +309,8 @@ int main() {
                 motorLeft.setVoltage(0.0); 
                 motorRight.setVoltage(0.0);
                 stop_counter = 0;  
+                high_speed_counter = 0;
+                buggy_moving = false;
                 continue; 
             } else {
                 stop_counter++;
@@ -315,6 +325,7 @@ int main() {
             motorRight.setVoltage(speed/SPEED_COEFF_3); 
             high_speed = false;
             low_speed = false;   // Set low_speed flag
+            buggy_moving = true;
             continue;
         }
         if (U6.detected() == true) {
@@ -324,36 +335,42 @@ int main() {
             motorRight.setVoltage(speed*SPEED_COEFF_3); 
             high_speed = false;
             low_speed = false;   // Set low_speed flag
+            buggy_moving = true;
             continue;
         }
         if (U3.detected() == true) { // when U3 detected line 
             if(DEBUG_MODE) {pc.printf("Line tracking: U3 detected\n");} 
             motorLeft.setVoltage(speed*SPEED_COEFF_2);
             motorRight.setVoltage(speed); 
+            buggy_moving = true;
             continue;
         }
         if (U4.detected() == true) { // when U4 detected line
             if(DEBUG_MODE) {pc.printf("Line tracking: U4 detected\n");} 
             motorLeft.setVoltage(speed);
             motorRight.setVoltage(speed*SPEED_COEFF_2);  
+            buggy_moving = true;
             continue;
         }
         if (U1.detected() == true && U2.detected() == true) { 
             if(DEBUG_MODE) {pc.printf("Line tracking: On a line (U1 & U2)\n");} 
             motorLeft.setVoltage(speed); // Keep driving straight
             motorRight.setVoltage(speed);
+            buggy_moving = true;
         }    
         if (U1.detected() == false && U2.detected() == true) { 
             if(DEBUG_MODE) {pc.printf("Line tracking: Turn left (~U1 & U2)\n");} 
             motorLeft.setVoltage(speed);
             motorRight.setVoltage(speed*SPEED_COEFF_1);
-            stop_counter = 0;              
+            stop_counter = 0;       
+            buggy_moving = true;       
         }
         if (U2.detected() == false && U1.detected() == true) {
             if(DEBUG_MODE) {pc.printf("Line tracking: Turn left (~U2 & U1)\n");} 
             motorLeft.setVoltage(speed*SPEED_COEFF_1);
             motorRight.setVoltage(speed); 
             stop_counter = 0;     
+            buggy_moving = true;
         }
     }
 }
